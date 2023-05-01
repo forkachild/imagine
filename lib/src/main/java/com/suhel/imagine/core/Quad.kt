@@ -1,59 +1,18 @@
 package com.suhel.imagine.core
 
 import android.opengl.GLES30
-import com.suhel.imagine.Constants
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class Quad {
+class Quad private constructor(
+    private val vboHandle: Int,
+    private val iboHandle: Int,
+    private val elementCount: Int,
+) {
 
-    private var vboHandle: Int = Constants.Resources.INVALID_HANDLE
-    private var iboHandle: Int = Constants.Resources.INVALID_HANDLE
+    private var isReleased: Boolean = false
 
-    private var isAllocated: Boolean = false
-
-    fun allocate() {
-        if (isAllocated) return
-
-        val bufferArray = IntArray(2)
-        GLES30.glGenBuffers(bufferArray.size, bufferArray, 0)
-
-        val vboBuffer = ByteBuffer.allocateDirect(Float.SIZE_BYTES * vertices.size)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .put(vertices)
-            .position(0)
-
-        vboHandle = bufferArray[0]
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
-        GLES30.glBufferData(
-            GLES30.GL_ARRAY_BUFFER,
-            Float.SIZE_BYTES * vertices.size,
-            vboBuffer,
-            GLES30.GL_STATIC_DRAW
-        )
-
-        val iboBuffer = ByteBuffer.allocateDirect(Short.SIZE_BYTES * indices.size)
-            .order(ByteOrder.nativeOrder())
-            .asShortBuffer()
-            .put(indices)
-            .position(0)
-
-        iboHandle = bufferArray[1]
-        GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
-        GLES30.glBufferData(
-            GLES30.GL_ELEMENT_ARRAY_BUFFER,
-            Short.SIZE_BYTES * indices.size,
-            iboBuffer,
-            GLES30.GL_STATIC_DRAW
-        )
-
-        isAllocated = true
-    }
-
-    fun draw(shader: Shader) {
-        throwIfReleased()
-
+    fun draw() = safeCall {
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
 
         GLES30.glVertexAttribPointer(
@@ -79,7 +38,7 @@ class Quad {
         GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
         GLES30.glDrawElements(
             GLES30.GL_TRIANGLES,
-            indices.size,
+            elementCount,
             GLES30.GL_UNSIGNED_SHORT,
             0,
         )
@@ -88,41 +47,76 @@ class Quad {
         GLES30.glDisableVertexAttribArray(Shader.aPosition)
     }
 
-    fun release() {
-        throwIfReleased()
-
+    fun release() = safeCall {
         val handles = intArrayOf(vboHandle, iboHandle)
         GLES30.glDeleteBuffers(handles.size, handles, 0)
 
-        isAllocated = false
+        isReleased = false
     }
 
-    private fun throwIfReleased() {
-        if (!isAllocated) throw IllegalStateException("Quad released")
+    private fun safeCall(block: () -> Unit) {
+        if (!isReleased) block()
     }
 
     companion object {
 
-        private val vertices = floatArrayOf(
-            -1.0f, 1.0f,
-            0.0f, 1.0f,
-
-            -1.0f, -1.0f,
-            0.0f, 0.0f,
-
-            1.0f, -1.0f,
-            1.0f, 0.0f,
-
-            1.0f, 1.0f,
-            1.0f, 1.0f,
-        )
-
-        private val indices = shortArrayOf(
-            0, 1, 2,
-            0, 2, 3,
-        )
-
         private const val COORDS_PER_VERTEX = 2
+
+        fun obtain(): Quad {
+            val vertices = floatArrayOf(
+                -1.0f, 1.0f,
+                0.0f, 1.0f,
+
+                -1.0f, -1.0f,
+                0.0f, 0.0f,
+
+                1.0f, -1.0f,
+                1.0f, 0.0f,
+
+                1.0f, 1.0f,
+                1.0f, 1.0f,
+            )
+
+            val indices = shortArrayOf(
+                0, 1, 2,
+                0, 2, 3,
+            )
+
+            val bufferArray = IntArray(2)
+            GLES30.glGenBuffers(bufferArray.size, bufferArray, 0)
+
+            val vboBuffer = ByteBuffer.allocateDirect(Float.SIZE_BYTES * vertices.size)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+                .put(vertices)
+                .position(0)
+
+            val vboHandle = bufferArray[0]
+            GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
+            GLES30.glBufferData(
+                GLES30.GL_ARRAY_BUFFER,
+                Float.SIZE_BYTES * vertices.size,
+                vboBuffer,
+                GLES30.GL_STATIC_DRAW
+            )
+
+            val iboBuffer = ByteBuffer.allocateDirect(Short.SIZE_BYTES * indices.size)
+                .order(ByteOrder.nativeOrder())
+                .asShortBuffer()
+                .put(indices)
+                .position(0)
+
+            val iboHandle = bufferArray[1]
+            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
+            GLES30.glBufferData(
+                GLES30.GL_ELEMENT_ARRAY_BUFFER,
+                Short.SIZE_BYTES * indices.size,
+                iboBuffer,
+                GLES30.GL_STATIC_DRAW
+            )
+
+            return Quad(vboHandle, iboHandle, indices.size)
+        }
 
     }
 

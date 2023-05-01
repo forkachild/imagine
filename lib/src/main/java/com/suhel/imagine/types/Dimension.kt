@@ -4,16 +4,12 @@ import android.graphics.Bitmap
 import com.suhel.imagine.Constants
 
 data class Dimension(
-    val width: Int = Constants.Dimensions.INVALID_SIZE,
-    val height: Int = Constants.Dimensions.INVALID_SIZE,
+    val width: Int,
+    val height: Int,
 ) {
 
     val aspectRatio: Float
         get() = width.toFloat() / height
-
-    val isInvalid: Boolean
-        get() = width == Constants.Dimensions.INVALID_SIZE
-                || height == Constants.Dimensions.INVALID_SIZE
 
     fun fitIn(containerWidth: Int, containerHeight: Int): Dimension {
         if (containerWidth >= width && containerHeight >= height)

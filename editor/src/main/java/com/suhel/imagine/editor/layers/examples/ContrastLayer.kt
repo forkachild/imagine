@@ -1,6 +1,9 @@
-package com.suhel.imagine.editor.layers
+package com.suhel.imagine.editor.layers.examples
 
-class ContrastLayer : EditableLayer(
+import com.suhel.imagine.editor.layers.EffectLayer
+
+class ContrastLayer : EffectLayer(
+    "Contrast",
     """
         vec4 process(vec4 color) {
             return vec4(color.r * color.r, color.g * color.g, color.b * color.b, 1.0);

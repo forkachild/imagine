@@ -1,37 +1,18 @@
 package com.suhel.imagine.util
 
 import android.opengl.GLES30
-import com.suhel.imagine.Constants
 import com.suhel.imagine.core.Shader
 import com.suhel.imagine.types.Layer
 
-class ShaderFactory {
+class ShaderFactory private constructor(
+    private val vsHandle: Int,
+) {
 
-    private var vsHandle: Int = Constants.Resources.INVALID_HANDLE
+    private var isReleased: Boolean = false
 
-    private var isAllocated: Boolean = false
-
-    fun allocate() {
-        vsHandle = GLES30.glCreateShader(GLES30.GL_VERTEX_SHADER)
-        GLES30.glShaderSource(vsHandle, VS_SOURCE)
-        GLES30.glCompileShader(vsHandle)
-        val compileStatus = getProxyInt {
-            GLES30.glGetShaderiv(vsHandle, GLES30.GL_COMPILE_STATUS, it, 0)
-        }
-        if (compileStatus != GLES30.GL_TRUE) {
-            val error = GLES30.glGetShaderInfoLog(vsHandle)
-            GLES30.glDeleteShader(vsHandle)
-            throw IllegalStateException("VS Error: $error")
-        }
-
-        isAllocated = true
-    }
-
-    fun generate(layer: Layer): Shader {
-        checkAllocated()
-
+    fun generate(source: String): Shader = safeCall {
         val fsHandle = GLES30.glCreateShader(GLES30.GL_FRAGMENT_SHADER)
-        GLES30.glShaderSource(fsHandle, generateSource(layer.source))
+        GLES30.glShaderSource(fsHandle, generateSource(source))
         GLES30.glCompileShader(fsHandle)
         val compileStatus = getProxyInt {
             GLES30.glGetShaderiv(fsHandle, GLES30.GL_COMPILE_STATUS, it, 0)
@@ -56,16 +37,16 @@ class ShaderFactory {
             throw IllegalStateException("Program Error: $error")
         }
 
-        return Shader(programHandle)
+        Shader(programHandle)
     }
 
-    fun release() {
-        checkAllocated()
+    fun release() = safeCall {
         GLES30.glDeleteShader(vsHandle)
+        isReleased = true
     }
 
-    private fun checkAllocated() {
-        if(!isAllocated) throw IllegalStateException("EffectShaderFactory not allocated")
+    private fun <T> safeCall(block: () -> T): T {
+        if (!isReleased) return block() else throw IllegalStateException("ShaderFactory released")
     }
 
     companion object {
@@ -93,7 +74,7 @@ class ShaderFactory {
             in vec2 vTexCoord;
             
             layout (location = 2) uniform sampler2D uImage;
-            layout (location = 3) uniform float uFactor;
+            layout (location = 3) uniform float uIntensity;
             
             out vec4 fragColor;
         """.trimIndent()
@@ -102,12 +83,28 @@ class ShaderFactory {
             void main() {
                 vec4 originalColor = texture(uImage, vTexCoord);
                 vec4 processedColor = process(originalColor);
-                fragColor = (uFactor * processedColor) + ((1.0 - uFactor) * originalColor);
+                fragColor = (uIntensity * processedColor) + ((1.0 - uIntensity) * originalColor);
             }
         """.trimIndent()
 
         private fun generateSource(effectSource: String): String {
             return "$FS_SOURCE_HEADER\n\n$effectSource\n\n$FS_SOURCE_FOOTER"
+        }
+
+        fun obtain(): ShaderFactory {
+            val vsHandle = GLES30.glCreateShader(GLES30.GL_VERTEX_SHADER)
+            GLES30.glShaderSource(vsHandle, VS_SOURCE)
+            GLES30.glCompileShader(vsHandle)
+            val compileStatus = getProxyInt {
+                GLES30.glGetShaderiv(vsHandle, GLES30.GL_COMPILE_STATUS, it, 0)
+            }
+            if (compileStatus != GLES30.GL_TRUE) {
+                val error = GLES30.glGetShaderInfoLog(vsHandle)
+                GLES30.glDeleteShader(vsHandle)
+                throw IllegalStateException("VS Error: $error")
+            }
+
+            return ShaderFactory(vsHandle)
         }
 
     }
