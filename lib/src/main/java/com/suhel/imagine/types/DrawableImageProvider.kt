@@ -6,10 +6,10 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
 
-class DrawableBitmapProvider(
+class DrawableImageProvider(
     private val context: Context,
     @DrawableRes private val resId: Int
-) : BitmapProvider {
+) : ImageProvider {
 
     override val bitmap: Bitmap
         get() = (ResourcesCompat.getDrawable(

@@ -26,11 +26,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import com.suhel.imagine.core.ImagineView
-import com.suhel.imagine.editor.layers.EffectLayer
 import com.suhel.imagine.editor.layers.examples.*
 import com.suhel.imagine.editor.ui.theme.ImagineTheme
-import com.suhel.imagine.types.Layer
-import com.suhel.imagine.types.UriBitmapProvider
+import com.suhel.imagine.types.UriImageProvider
+import kotlin.reflect.KProperty
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,69 +52,8 @@ fun ImagineLayout() {
     val layers = remember {
         mutableListOf(
             ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
-            ContrastLayer(),
             GrayscaleLayer(),
             InvertLayer(),
-            ColorCycleLayer(),
         )
     }
 
@@ -125,7 +63,7 @@ fun ImagineLayout() {
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            imagineView?.setBitmapProvider(UriBitmapProvider(context, uri))
+            imagineView?.imageProvider = UriImageProvider(context, uri)
             imagineView?.layers = layers
             imagineView?.requestRender()
         }
@@ -161,7 +99,7 @@ fun ImagineLayout() {
                 factory = { ImagineView(it) },
                 modifier = Modifier.fillMaxSize(),
                 update = { imagineView = it },
-                onReset = { it.reset() },
+                onReset = { },
             )
             TextButton(
                 modifier = Modifier
@@ -177,9 +115,7 @@ fun ImagineLayout() {
         }
 
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        LazyColumn(Modifier.fillMaxSize()) {
             items(layers) { layer ->
                 var sliderValue by remember { mutableStateOf(layer.factor) }
 
@@ -239,4 +175,32 @@ fun ImagineLayout() {
             )
         }
     }
+}
+
+fun <T : Any?> rememberKoiMaach(
+    initialValue: T,
+    onUpdate: (oldValue: T, newValue: T) -> Unit
+): KoiMaach<T> = KoiMaach(initialValue, onUpdate)
+
+class KoiMaach<T : Any?>(
+    private var value: T,
+    private val onUpdate: (oldValue: T, newValue: T) -> Unit
+) {
+
+    operator fun getValue(
+        thisRef: Any?,
+        property: KProperty<*>
+    ): T = value
+
+    operator fun setValue(
+        thisRef: Any?,
+        property: KProperty<*>,
+        value: T
+    ) {
+        if (this.value != value) {
+            onUpdate(this.value, value)
+            this.value = value
+        }
+    }
+
 }
