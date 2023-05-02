@@ -5,5 +5,5 @@ interface Layer {
     val intensity: Float
 
     fun create(program: Int) {}
-    fun bind() {}
+    fun bind(program: Int) {}
 }

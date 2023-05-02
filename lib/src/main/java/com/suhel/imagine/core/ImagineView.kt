@@ -5,19 +5,38 @@ import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.opengl.GLSurfaceView.Renderer
 import android.util.AttributeSet
-import com.suhel.imagine.types.BitmapProvider
 import com.suhel.imagine.types.Dimension
+import com.suhel.imagine.types.ImageProvider
 import com.suhel.imagine.types.Layer
 import com.suhel.imagine.types.Mat4
-import com.suhel.imagine.util.ShaderFactory
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
-import kotlin.reflect.KClass
 
 class ImagineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : GLSurfaceView(context, attrs), Renderer {
+
+    var layers: List<Layer>?
+        get() = state.layers
+        set(value) {
+            state = state.copy(
+                layers = value,
+            )
+        }
+
+    var imageProvider: ImageProvider?
+        get() = state.imageProvider
+        set(value) {
+            state = state.copy(
+                imageProvider = value,
+                isPendingTextureUpdate = true,
+                isPendingSwapchainUpdate = true,
+                isPendingAspectRatioMatrixUpdate = true,
+            )
+        }
+
+    private var state: State = State()
 
     init {
         setEGLContextClientVersion(3)
@@ -26,123 +45,126 @@ class ImagineView @JvmOverloads constructor(
         renderMode = RENDERMODE_WHEN_DIRTY
     }
 
-    var layers: List<Layer>? = null
-    var isPreview: Boolean = true
-
-    private val layerShaderMap: MutableMap<KClass<out Layer>, Shader> = mutableMapOf()
-    private val aspectRatioMatrix: Mat4 = Mat4()
-    private val invertMatrix: Mat4 = Mat4.ofScale(1.0f, -1.0f, 1.0f)
-    private val unitMatrix: Mat4 = Mat4()
-
-    private var shaderFactory: ShaderFactory? = null
-    private var quad: Quad? = null
-    private var sourceTexture: Texture? = null
-    private var previewSwapchain: Swapchain? = null
-    private var exportSwapchain: Swapchain? = null
-    private var viewportDimension: Dimension? = null
-    private var bitmapDimension: Dimension? = null
-    private var swapchainDimension: Dimension? = null
-
-    private var isActive: Boolean = false
-    private var pendingBitmapProvider: BitmapProvider? = null
-
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES30.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-        shaderFactory = ShaderFactory.obtain()
-        quad = Quad.obtain()
-
-        pendingBitmapProvider?.let { loadTexture(it) }
-        isActive = true
+        state = State(
+            isReady = true,
+            shaderFactory = ShaderFactory.create(),
+            quad = Quad.create(),
+        )
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        setViewportSize(width, height)
+        val dimension = state.viewport?.dimension
+        if (dimension != null && dimension.width == width && dimension.height == height) return
+
+        state = state.copy(
+            viewport = Viewport(Dimension(width, height)),
+            isPendingSwapchainUpdate = true,
+            isPendingAspectRatioMatrixUpdate = true,
+        )
     }
 
     override fun onDrawFrame(gl: GL10?) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
-        render()
+        update()
+        renderLayers()
     }
 
-    fun reset() = queueEvent {
-        shaderFactory?.release()
-        shaderFactory = null
-
-        quad?.release()
-        quad = null
-
-        sourceTexture?.release()
-        sourceTexture = null
-
-        previewSwapchain?.release()
-        previewSwapchain = null
-
-        viewportDimension = null
-        bitmapDimension = null
-        swapchainDimension = null
+    private fun update() {
+        updateTexture()
+        updateSwapchain()
+        updateAspectRatioMatrix()
     }
 
-    fun setBitmapProvider(bitmapProvider: BitmapProvider) = queueEvent {
-        if (isActive)
-            loadTexture(bitmapProvider)
-        else
-            pendingBitmapProvider = bitmapProvider
+    private fun updateTexture() {
+        if (state.isPendingTextureUpdate) {
+            state.image?.release()
+
+            state = state.copy(
+                isPendingTextureUpdate = false,
+                image = state.imageProvider?.bitmap?.let { bitmap ->
+                    Texture.create(bitmap, mipmap = true, recycleBitmap = true)
+                },
+            )
+        }
     }
 
-    private fun setViewportSize(width: Int, height: Int) {
-        viewportDimension = Dimension(width, height)
-        updateDimensions()
+    private fun updateSwapchain() {
+        if (state.isPendingSwapchainUpdate) {
+            state.swapchain?.release()
+
+            val texture = state.image
+            val viewport = state.viewport
+
+            state = state.copy(
+                isPendingSwapchainUpdate = false,
+                swapchain = if (texture != null && viewport != null)
+                    Swapchain.create(2, texture.dimension.fitInside(viewport.dimension))
+                else null,
+            )
+        }
     }
 
-    private fun loadTexture(bitmapProvider: BitmapProvider) {
-        val bitmap = bitmapProvider.bitmap
-        sourceTexture?.release()
-        sourceTexture = Texture.obtain(bitmap, true)
-        bitmapDimension = Dimension.fromBitmap(bitmap)
-        bitmap.recycle()
-        updateDimensions()
+    private fun updateAspectRatioMatrix() {
+        if (state.isPendingAspectRatioMatrixUpdate) {
+            val image = state.image
+            val viewport = state.viewport
+
+            state = state.copy(
+                isPendingAspectRatioMatrixUpdate = false,
+                aspectRatioMatrix = if (image != null && viewport != null)
+                    Mat4.ofAspectFit(image.dimension.aspectRatio, viewport.dimension.aspectRatio)
+                else null,
+            )
+        }
     }
 
-    private fun render() {
-        val layers = this.layers ?: return
-        val swapchain = this.previewSwapchain ?: return
-        val sourceTexture = this.sourceTexture ?: return
+    private fun renderLayers() {
+        val shaderFactory = state.shaderFactory ?: return
+        val quad = state.quad ?: return
+        val aspectRatioMatrix = state.aspectRatioMatrix ?: return
+        val swapchain = state.swapchain ?: return
+        val image = state.image ?: return
+        val viewport = state.viewport ?: return
+        val layers = state.layers ?: return
 
         layers.forEachIndexed { index, layer ->
             val isFirstIndex = index == 0
             val isLastIndex = index == layers.lastIndex
 
-            val texture = if (isFirstIndex)
-                sourceTexture else swapchain.texture()
-            val framebuffer = if (isLastIndex)
-                Framebuffer.Display else swapchain.framebuffer()
+            val texture = if (isFirstIndex) image else swapchain.texture()
+            val framebuffer = if (isLastIndex) Framebuffer.Viewport else swapchain.framebuffer()
 
             renderLayer(
                 layer,
+                quad,
+                viewport,
+                swapchain,
+                shaderFactory,
                 texture,
                 framebuffer,
+                aspectRatioMatrix,
                 isLastIndex,
                 isFirstIndex,
             )
-
-            swapchain.next()
         }
     }
 
     private fun renderLayer(
         layer: Layer,
+        quad: Quad,
+        viewport: Viewport,
+        swapchain: Swapchain,
+        shaderFactory: ShaderFactory,
         texture: Texture,
         framebuffer: Framebuffer,
+        aspectRatioMatrix: Mat4,
         isFrontBuffer: Boolean,
         isInverted: Boolean,
     ) {
-        val quad = this.quad ?: return
-        val viewportDimension = this.viewportDimension ?: return
-        val swapchainDimension = this.swapchainDimension ?: return
-        val shaderFactory = this.shaderFactory ?: return
-
-        val shader = getShaderForLayer(layer, shaderFactory)
-        val dimension = if (isFrontBuffer) viewportDimension else swapchainDimension
+        val shader = shaderFactory.getShader(layer) ?: return
+        val dimension = if (isFrontBuffer) viewport.dimension else swapchain.dimension
 
         // Change viewport based on mode
         GLES30.glViewport(
@@ -160,7 +182,7 @@ class ImagineView @JvmOverloads constructor(
             Shader.uAspectRatio,
             1,
             false,
-            if (isFrontBuffer) aspectRatioMatrix.values else unitMatrix.values,
+            if (isFrontBuffer) aspectRatioMatrix.values else UnitMatrix.values,
             0,
         )
 
@@ -169,64 +191,50 @@ class ImagineView @JvmOverloads constructor(
             Shader.uInvert,
             1,
             false,
-            if (isInverted) invertMatrix.values else unitMatrix.values,
+            if (isInverted) InvertMatrix.values else UnitMatrix.values,
             0,
         )
 
         // Bind uImage
         GLES30.glUniform1i(Shader.uImage, 0)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
-        texture.bind()
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, texture.handle)
 
         // Bind uFactor
         GLES30.glUniform1f(Shader.uIntensity, layer.intensity.coerceIn(0.0f, 1.0f))
 
         // Bind layer variables
-        layer.bind()
+        layer.bind(shader.program)
 
         // Bind render target
         framebuffer.bind()
 
         // Rendering
         quad.draw()
+
+        // Move on to the next image
+        swapchain.next()
     }
 
-    private fun getShaderForLayer(layer: Layer, shaderFactory: ShaderFactory): Shader {
-        return layerShaderMap[layer::class] ?: run {
-            val key = layer::class
-            val shader = shaderFactory.generate(layer.source)
-            layer.create(shader.program)
-            layerShaderMap[key] = shader
-            shader
-        }
-    }
+    private data class State(
+        val isReady: Boolean = false,
+        val isPreview: Boolean = true,
+        val isPendingTextureUpdate: Boolean = false,
+        val isPendingSwapchainUpdate: Boolean = false,
+        val isPendingAspectRatioMatrixUpdate: Boolean = false,
+        val shaderFactory: ShaderFactory? = null,
+        val quad: Quad? = null,
+        val viewport: Viewport? = null,
+        val layers: List<Layer>? = null,
+        val imageProvider: ImageProvider? = null,
+        val image: Texture? = null,
+        val swapchain: Swapchain? = null,
+        val aspectRatioMatrix: Mat4? = null,
+    )
 
-    private fun updateDimensions() {
-        val bitmapDimension = this.bitmapDimension ?: return
-        val viewportDimension = this.viewportDimension ?: return
-
-        val swapchainDimension = if (isPreview)
-            bitmapDimension.fitIn(viewportDimension) else bitmapDimension
-
-        previewSwapchain?.release()
-        previewSwapchain = Swapchain.obtain(2, swapchainDimension.width, swapchainDimension.height)
-
-        this.swapchainDimension = swapchainDimension
-
-        if (isPreview) {
-            val bitmapAspectRatio = bitmapDimension.aspectRatio
-            val viewportAspectRatio = viewportDimension.aspectRatio
-
-            aspectRatioMatrix
-                .unit()
-                .scale(
-                    if (bitmapAspectRatio > viewportAspectRatio)
-                        1.0f else (bitmapAspectRatio / viewportAspectRatio),
-                    if (bitmapAspectRatio < viewportAspectRatio)
-                        1.0f else (viewportAspectRatio / bitmapAspectRatio),
-                    1.0f,
-                )
-        }
+    companion object {
+        val UnitMatrix: Mat4 = Mat4.ofUnit()
+        val InvertMatrix: Mat4 = Mat4.ofScale(1.0f, -1.0f, 1.0f)
     }
 
 }

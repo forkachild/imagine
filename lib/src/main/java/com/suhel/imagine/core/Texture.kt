@@ -5,13 +5,13 @@ import android.opengl.GLES30
 import android.opengl.GLUtils
 import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.Constants
+import com.suhel.imagine.types.Dimension
 import com.suhel.imagine.util.getProxyInt
 import com.suhel.imagine.util.setProxyInt
 
 class Texture @VisibleForTesting constructor(
     val handle: Int = Constants.Resources.INVALID_HANDLE,
-    val width: Int = Constants.Dimensions.INVALID_SIZE,
-    val height: Int = Constants.Dimensions.INVALID_SIZE,
+    val dimension: Dimension,
 ) {
 
     private var isReleased: Boolean = false
@@ -31,12 +31,12 @@ class Texture @VisibleForTesting constructor(
     }
 
     private fun throwIfReleased() {
-        if(isReleased) throw IllegalStateException("Texture($handle) released")
+        if (isReleased) throw IllegalStateException("Texture($handle) released")
     }
 
     companion object {
 
-        fun obtain(width: Int, height: Int): Texture {
+        fun create(dimension: Dimension): Texture {
             val textureHandle = getProxyInt { GLES30.glGenTextures(1, it, 0) }
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureHandle)
             GLES30.glTexParameteri(
@@ -63,18 +63,18 @@ class Texture @VisibleForTesting constructor(
                 GLES30.GL_TEXTURE_2D,
                 0,
                 GLES30.GL_RGBA,
-                width,
-                height,
+                dimension.width,
+                dimension.height,
                 0,
                 GLES30.GL_RGBA,
                 GLES30.GL_UNSIGNED_BYTE,
                 null
             )
 
-            return Texture(textureHandle, width, height)
+            return Texture(textureHandle, dimension)
         }
 
-        fun obtain(count: Int, width: Int, height: Int): List<Texture> {
+        fun create(count: Int, dimension: Dimension): List<Texture> {
             val textureHandles = IntArray(count)
             GLES30.glGenTextures(count, textureHandles, 0)
 
@@ -104,8 +104,8 @@ class Texture @VisibleForTesting constructor(
                     GLES30.GL_TEXTURE_2D,
                     0,
                     GLES30.GL_RGBA,
-                    width,
-                    height,
+                    dimension.width,
+                    dimension.height,
                     0,
                     GLES30.GL_RGBA,
                     GLES30.GL_UNSIGNED_BYTE,
@@ -113,10 +113,14 @@ class Texture @VisibleForTesting constructor(
                 )
             }
 
-            return textureHandles.map { Texture(it, width, height) }
+            return textureHandles.map { Texture(it, dimension) }
         }
 
-        fun obtain(bitmap: Bitmap, mipmap: Boolean = false): Texture {
+        fun create(
+            bitmap: Bitmap,
+            mipmap: Boolean = false,
+            recycleBitmap: Boolean = false
+        ): Texture {
             val textureHandle = getProxyInt { GLES30.glGenTextures(1, it, 0) }
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureHandle)
             GLES30.glTexParameteri(
@@ -145,7 +149,10 @@ class Texture @VisibleForTesting constructor(
                 GLES30.glGenerateMipmap(GLES30.GL_TEXTURE_2D)
             }
 
-            return Texture(textureHandle, bitmap.width, bitmap.height)
+            if(recycleBitmap)
+                bitmap.recycle()
+
+            return Texture(textureHandle, Dimension(bitmap.width, bitmap.height))
         }
 
     }

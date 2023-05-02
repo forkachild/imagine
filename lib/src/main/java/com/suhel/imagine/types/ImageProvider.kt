@@ -2,6 +2,6 @@ package com.suhel.imagine.types
 
 import android.graphics.Bitmap
 
-interface BitmapProvider {
+interface ImageProvider {
     val bitmap: Bitmap
 }

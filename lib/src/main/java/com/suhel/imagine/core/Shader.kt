@@ -1,6 +1,16 @@
 package com.suhel.imagine.core
 
+import android.opengl.GLES30
+
 class Shader(val program: Int) {
+
+    fun use() {
+        GLES30.glUseProgram(program)
+    }
+
+    fun release() {
+        GLES30.glDeleteProgram(program)
+    }
 
     companion object {
         const val aPosition: Int = 0

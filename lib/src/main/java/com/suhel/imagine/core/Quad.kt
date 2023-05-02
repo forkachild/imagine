@@ -62,7 +62,7 @@ class Quad private constructor(
 
         private const val COORDS_PER_VERTEX = 2
 
-        fun obtain(): Quad {
+        fun create(): Quad {
             val vertices = floatArrayOf(
                 -1.0f, 1.0f,
                 0.0f, 1.0f,

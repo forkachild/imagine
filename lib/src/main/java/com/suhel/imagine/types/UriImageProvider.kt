@@ -5,10 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 
-class UriBitmapProvider(
+class UriImageProvider(
     private val context: Context,
     private val uri: Uri,
-) : BitmapProvider {
+) : ImageProvider {
     override val bitmap: Bitmap
         get() = BitmapFactory.decodeStream(
             context.contentResolver.openInputStream(uri)

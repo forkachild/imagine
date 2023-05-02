@@ -1,12 +1,11 @@
 package com.suhel.imagine.core
 
 import androidx.annotation.VisibleForTesting
-import com.suhel.imagine.Constants
+import com.suhel.imagine.types.Dimension
 
 class Swapchain @VisibleForTesting constructor(
-    val count: Int = Constants.Dimensions.INVALID_SIZE,
-    val width: Int = Constants.Dimensions.INVALID_SIZE,
-    val height: Int = Constants.Dimensions.INVALID_SIZE,
+    val count: Int,
+    val dimension: Dimension,
     private val textures: List<Texture> = emptyList(),
     private val framebuffers: List<Framebuffer> = emptyList()
 ) {
@@ -47,15 +46,15 @@ class Swapchain @VisibleForTesting constructor(
 
     companion object {
 
-        fun obtain(count: Int, width: Int, height: Int): Swapchain {
-            val textures = Texture.obtain(count, width, height)
+        fun create(count: Int, dimension: Dimension): Swapchain {
+            val textures = Texture.create(count, dimension)
             val framebuffers = Framebuffer.obtain(count)
 
             repeat(count) { index ->
                 framebuffers[index].attachTexture(textures[index])
             }
 
-            return Swapchain(count, width, height, textures, framebuffers)
+            return Swapchain(count, dimension, textures, framebuffers)
         }
 
     }
