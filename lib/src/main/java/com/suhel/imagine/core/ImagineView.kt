@@ -24,9 +24,10 @@ class ImagineView @JvmOverloads constructor(
     var layers: List<Layer>?
         get() = state.layers
         set(value) {
-            state = state.copy(
-                layers = value,
-            )
+            if (state.layers != value)
+                state = state.copy(
+                    layers = value,
+                )
         }
 
     var imageProvider: ImageProvider?
@@ -56,11 +57,12 @@ class ImagineView @JvmOverloads constructor(
         debugFlags = DEBUG_CHECK_GL_ERROR or DEBUG_LOG_GL_CALLS
         setRenderer(this)
         renderMode = RENDERMODE_WHEN_DIRTY
+        preserveEGLContextOnPause = true
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES30.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-        state = State(
+        state = state.copy(
             isReady = true,
             shaderFactory = ShaderFactory.create(),
             quad = Quad.create(),
