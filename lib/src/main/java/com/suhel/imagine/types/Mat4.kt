@@ -4,19 +4,14 @@ import android.opengl.Matrix
 
 class Mat4 private constructor() {
 
-    val values = FloatArray(16)
+    val data = FloatArray(16)
 
     init {
-        Matrix.setIdentityM(values, 0)
-    }
-
-    fun unit(): Mat4 {
-        Matrix.setIdentityM(values, 0)
-        return this
+        Matrix.setIdentityM(data, 0)
     }
 
     fun scale(x: Float, y: Float, z: Float): Mat4 {
-        Matrix.scaleM(values, 0, x, y, z)
+        Matrix.scaleM(data, 0, x, y, z)
         return this
     }
 

@@ -12,28 +12,28 @@ class Quad private constructor(
 
     private var isReleased: Boolean = false
 
-    fun draw() = safeCall {
+    fun draw() = releaseSafe {
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
 
         GLES30.glVertexAttribPointer(
-            Shader.aPosition,
+            LayerShader.aPosition,
             COORDS_PER_VERTEX,
             GLES30.GL_FLOAT,
             false,
             Float.SIZE_BYTES * COORDS_PER_VERTEX * 2,
             0,
         )
-        GLES30.glEnableVertexAttribArray(Shader.aPosition)
+        GLES30.glEnableVertexAttribArray(LayerShader.aPosition)
 
         GLES30.glVertexAttribPointer(
-            Shader.aTexCoords,
+            LayerShader.aTexCoords,
             COORDS_PER_VERTEX,
             GLES30.GL_FLOAT,
             false,
             Float.SIZE_BYTES * COORDS_PER_VERTEX * 2,
             Float.SIZE_BYTES * COORDS_PER_VERTEX,
         )
-        GLES30.glEnableVertexAttribArray(Shader.aTexCoords)
+        GLES30.glEnableVertexAttribArray(LayerShader.aTexCoords)
 
         GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
         GLES30.glDrawElements(
@@ -43,18 +43,18 @@ class Quad private constructor(
             0,
         )
 
-        GLES30.glDisableVertexAttribArray(Shader.aTexCoords)
-        GLES30.glDisableVertexAttribArray(Shader.aPosition)
+        GLES30.glDisableVertexAttribArray(LayerShader.aTexCoords)
+        GLES30.glDisableVertexAttribArray(LayerShader.aPosition)
     }
 
-    fun release() = safeCall {
+    fun release() = releaseSafe {
         val handles = intArrayOf(vboHandle, iboHandle)
         GLES30.glDeleteBuffers(handles.size, handles, 0)
 
         isReleased = false
     }
 
-    private fun safeCall(block: () -> Unit) {
+    private fun releaseSafe(block: () -> Unit) {
         if (!isReleased) block()
     }
 

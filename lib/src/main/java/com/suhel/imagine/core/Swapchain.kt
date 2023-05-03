@@ -4,7 +4,6 @@ import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.types.Dimension
 
 class Swapchain @VisibleForTesting constructor(
-    val count: Int,
     val dimension: Dimension,
     private val textures: List<Texture> = emptyList(),
     private val framebuffers: List<Framebuffer> = emptyList()
@@ -14,7 +13,7 @@ class Swapchain @VisibleForTesting constructor(
     private var isReleased: Boolean = false
 
     private val nextIndex: Int
-        get() = (index + 1) % count
+        get() = (index + 1) % LENGTH
 
     fun texture(): Texture {
         throwIfReleased()
@@ -32,7 +31,7 @@ class Swapchain @VisibleForTesting constructor(
 
     fun release() {
         throwIfReleased()
-        repeat(count) { index ->
+        repeat(LENGTH) { index ->
             framebuffers[index].release()
             textures[index].release()
         }
@@ -46,15 +45,17 @@ class Swapchain @VisibleForTesting constructor(
 
     companion object {
 
-        fun create(count: Int, dimension: Dimension): Swapchain {
-            val textures = Texture.create(count, dimension)
-            val framebuffers = Framebuffer.obtain(count)
+        private const val LENGTH: Int = 2
 
-            repeat(count) { index ->
+        fun create(dimension: Dimension): Swapchain {
+            val textures = Texture.create(LENGTH, dimension)
+            val framebuffers = Framebuffer.obtain(LENGTH)
+
+            repeat(LENGTH) { index ->
                 framebuffers[index].attachTexture(textures[index])
             }
 
-            return Swapchain(count, dimension, textures, framebuffers)
+            return Swapchain(dimension, textures, framebuffers)
         }
 
     }

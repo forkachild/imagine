@@ -1,17 +1,8 @@
 package com.suhel.imagine.types
 
-import android.graphics.Bitmap
 import android.opengl.GLES30
 
-class Dimension(width: Int, height: Int) {
-
-    val values = intArrayOf(width, height)
-
-    val width: Int
-        get() = values[0]
-
-    val height: Int
-        get() = values[1]
+data class Dimension(val width: Int, val height: Int) {
 
     val aspectRatio: Float
         get() = width.toFloat() / height
@@ -33,20 +24,12 @@ class Dimension(width: Int, height: Int) {
         return fitInside(container.width, container.height)
     }
 
-    fun bind() {
+    fun setAsViewport() {
         GLES30.glViewport(0, 0, width, height)
     }
 
     override fun toString(): String {
         return "${width}x${height}"
-    }
-
-    companion object {
-
-        fun fromBitmap(bitmap: Bitmap): Dimension {
-            return Dimension(bitmap.width, bitmap.height)
-        }
-
     }
 
 }
