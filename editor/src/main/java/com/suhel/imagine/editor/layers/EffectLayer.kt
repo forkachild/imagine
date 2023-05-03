@@ -7,7 +7,7 @@ abstract class EffectLayer(
     final override val source: String
 ) : Layer {
 
-    var factor: Float = 0.0f
+    var factor: Float = 1.0f
     final override val intensity: Float
         get() = factor
 
