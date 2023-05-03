@@ -10,9 +10,9 @@ class ShaderFactory private constructor(
     private val vsHandle: Int,
 ) {
     private var isReleased: Boolean = false
-    private val layerShaderMap: MutableMap<KClass<out Layer>, Shader> = mutableMapOf()
+    private val layerShaderMap: MutableMap<KClass<out Layer>, LayerShader> = mutableMapOf()
 
-    fun getShader(layer: Layer): Shader? = safeCall {
+    fun getShader(layer: Layer): LayerShader? = safeCall {
         layerShaderMap[layer::class] ?: run {
             val fsHandle = GLES30.glCreateShader(GLES30.GL_FRAGMENT_SHADER)
             GLES30.glShaderSource(fsHandle, generateSource(layer.source))
@@ -42,7 +42,7 @@ class ShaderFactory private constructor(
                 return@run null
             }
 
-            val shader = Shader(programHandle)
+            val shader = LayerShader(programHandle)
             layerShaderMap[layer::class] = shader
             shader
         }

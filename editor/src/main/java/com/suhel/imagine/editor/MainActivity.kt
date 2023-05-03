@@ -1,6 +1,14 @@
 package com.suhel.imagine.editor
 
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -29,7 +37,9 @@ import com.suhel.imagine.core.ImagineView
 import com.suhel.imagine.editor.layers.examples.*
 import com.suhel.imagine.editor.ui.theme.ImagineTheme
 import com.suhel.imagine.types.UriImageProvider
-import kotlin.reflect.KProperty
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +64,8 @@ fun ImagineLayout() {
             ContrastLayer(),
             GrayscaleLayer(),
             InvertLayer(),
+            RedFilterLayer(),
+            ColorCycleLayer(),
         )
     }
 
@@ -65,7 +77,7 @@ fun ImagineLayout() {
         if (uri != null) {
             imagineView?.imageProvider = UriImageProvider(context, uri)
             imagineView?.layers = layers
-            imagineView?.requestRender()
+            imagineView?.preview()
         }
     }
 
@@ -101,16 +113,24 @@ fun ImagineLayout() {
                 update = { imagineView = it },
                 onReset = { },
             )
-            TextButton(
-                modifier = Modifier
-                    .align(Alignment.TopEnd),
-                onClick = {
-                    photoPicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd),
             ) {
-                Text("PICK")
+                TextButton(
+                    onClick = {
+                        photoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                ) {
+                    Text("PICK")
+                }
+                TextButton(onClick = {
+                    imagineView?.onBitmap = { saveBitmapAndRecycle(context, it) }
+                    imagineView?.export()
+                }) {
+                    Text("EXPORT")
+                }
             }
         }
 
@@ -144,7 +164,7 @@ fun ImagineLayout() {
                             onValueChange = {
                                 sliderValue = it
                                 layer.factor = it
-                                imagineView?.requestRender()
+                                imagineView?.preview()
                             },
                         )
                     }
@@ -177,30 +197,44 @@ fun ImagineLayout() {
     }
 }
 
-fun <T : Any?> rememberKoiMaach(
-    initialValue: T,
-    onUpdate: (oldValue: T, newValue: T) -> Unit
-): KoiMaach<T> = KoiMaach(initialValue, onUpdate)
+private fun generateFileName(): String =
+    SimpleDateFormat("dd-MM-yyyy-HH-mm-ss", java.util.Locale.getDefault()).format(Date())
 
-class KoiMaach<T : Any?>(
-    private var value: T,
-    private val onUpdate: (oldValue: T, newValue: T) -> Unit
+@Throws(IOException::class)
+private fun saveBitmapAndRecycle(
+    context: Context,
+    bitmap: Bitmap,
 ) {
 
-    operator fun getValue(
-        thisRef: Any?,
-        property: KProperty<*>
-    ): T = value
-
-    operator fun setValue(
-        thisRef: Any?,
-        property: KProperty<*>,
-        value: T
-    ) {
-        if (this.value != value) {
-            onUpdate(this.value, value)
-            this.value = value
-        }
+    val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, generateFileName())
+        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
     }
 
+    var uri: Uri? = null
+
+    runCatching {
+        with(context.contentResolver) {
+            insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.also {
+                uri = it // Keep uri reference so it can be removed on failure
+
+                openOutputStream(it)?.use { stream ->
+                    if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+                        throw IOException("Failed to save bitmap.")
+                    }
+                } ?: throw IOException("Failed to open output stream.")
+
+            } ?: throw IOException("Failed to create new MediaStore record.")
+        }
+    }.getOrElse {
+        uri?.let { orphanUri ->
+            // Don't leave an orphan entry in the MediaStore
+            context.contentResolver.delete(orphanUri, null, null)
+        }
+        bitmap.recycle()
+
+        throw it
+    }
 }

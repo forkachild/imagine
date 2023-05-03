@@ -29,6 +29,10 @@ class Framebuffer @VisibleForTesting constructor(
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, handle)
     }
 
+    fun clear() {
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
+    }
+
     fun release() {
         throwIfReleased()
         setProxyInt(handle) {
