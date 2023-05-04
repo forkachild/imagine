@@ -1,7 +1,10 @@
 package com.suhel.imagine.core
 
+import android.graphics.Bitmap
+import android.opengl.GLES30
 import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.types.Dimension
+import java.nio.ByteBuffer
 
 class Swapchain @VisibleForTesting constructor(
     val dimension: Dimension,
@@ -26,6 +29,29 @@ class Swapchain @VisibleForTesting constructor(
             throwIfReleased()
             return textures[index]
         }
+
+    val bitmap: Bitmap
+        get() = ByteBuffer
+            .allocateDirect(dimension.width * dimension.height * 4)
+            .let { buffer ->
+                GLES30.glReadPixels(
+                    0,
+                    0,
+                    dimension.width,
+                    dimension.height,
+                    GLES30.GL_RGBA,
+                    GLES30.GL_UNSIGNED_BYTE,
+                    buffer
+                )
+
+                Bitmap.createBitmap(
+                    dimension.width,
+                    dimension.height,
+                    Bitmap.Config.ARGB_8888
+                ).apply {
+                    copyPixelsFromBuffer(buffer)
+                }
+            }
 
     fun next() {
         index = nextIndex
