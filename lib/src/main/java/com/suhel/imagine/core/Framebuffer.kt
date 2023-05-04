@@ -48,7 +48,7 @@ class Framebuffer @VisibleForTesting constructor(
 
     companion object {
 
-        val Viewport = Framebuffer(0)
+        val default = Framebuffer(0)
 
         fun obtain(): Framebuffer {
             val framebufferHandle = getProxyInt {

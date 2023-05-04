@@ -15,15 +15,17 @@ class Swapchain @VisibleForTesting constructor(
     private val nextIndex: Int
         get() = (index + 1) % LENGTH
 
-    fun texture(): Texture {
-        throwIfReleased()
-        return textures[index]
-    }
+    val framebuffer: Framebuffer
+        get() {
+            throwIfReleased()
+            return framebuffers[nextIndex]
+        }
 
-    fun framebuffer(): Framebuffer {
-        throwIfReleased()
-        return framebuffers[nextIndex]
-    }
+    val texture: Texture
+        get() {
+            throwIfReleased()
+            return textures[index]
+        }
 
     fun next() {
         index = nextIndex

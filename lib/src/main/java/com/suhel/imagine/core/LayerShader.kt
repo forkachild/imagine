@@ -3,14 +3,17 @@ package com.suhel.imagine.core
 import android.opengl.GLES30
 import com.suhel.imagine.types.Mat4
 
-class LayerShader(val program: Int) {
+sealed class LayerShader(private val shader: Shader.Complete) {
+
+    val program: Int
+        get() = shader.program
 
     fun release() {
-        GLES30.glDeleteProgram(program)
+        shader.release()
     }
 
     fun use() {
-        GLES30.glUseProgram(program)
+        shader.use()
     }
 
     fun setAspectRatioMatrix(matrix: Mat4) {
@@ -27,8 +30,14 @@ class LayerShader(val program: Int) {
         texture.bind()
     }
 
-    fun setIntensity(value: Float) {
-        GLES30.glUniform1f(uIntensity, value)
+    class Bypass(shader: Shader.Complete) : LayerShader(shader)
+
+    class Layer(shader: Shader.Complete) : LayerShader(shader) {
+
+        fun setIntensity(value: Float) {
+            GLES30.glUniform1f(uIntensity, value)
+        }
+
     }
 
     companion object {
