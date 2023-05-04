@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import com.suhel.imagine.core.ImagineEngine
 import com.suhel.imagine.editor.databinding.ActivityMainBinding
 import com.suhel.imagine.editor.helper.BitmapSaveTask
 import com.suhel.imagine.editor.layers.EffectLayer
@@ -18,6 +19,7 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var imagineEngine: ImagineEngine
     private lateinit var adapter: LayerAdapter
 
     private val layers: MutableList<EffectLayer> = mutableListOf()
@@ -27,17 +29,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val imagePicker = registerForActivityResult(
-            ActivityResultContracts.PickVisualMedia()
-        ) { uri ->
-            if (uri != null) {
-                binding.imagine.imageProvider = UriImageProvider(this, uri)
-                binding.imagine.preview()
-            }
-        }
+        imagineEngine = ImagineEngine(binding.imagine)
+        binding.imagine.engine = imagineEngine
 
-        binding.imagine.layers = layers
-        binding.imagine.onBitmap = { bitmap ->
+        imagineEngine.layers = layers
+        imagineEngine.onBitmap = { bitmap ->
             val dialog = BitmapSaveFormatDialog()
             dialog.onChoose = { format ->
                 Thread(
@@ -58,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         adapter.data = layers
         adapter.onLayerUpdated = { index, intensity ->
             layers[index].factor = intensity
-            binding.imagine.preview()
+            imagineEngine.updatePreview()
         }
 
         binding.lstLayers.layoutManager = LinearLayoutManager(this)
@@ -75,16 +71,25 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     adapter.notifyItemMoved(from, to)
-                    binding.imagine.preview()
+                    imagineEngine.updatePreview()
                     true
                 },
                 onItemSwipe = { idx ->
                     layers.removeAt(idx)
                     adapter.notifyItemRemoved(idx)
-                    binding.imagine.preview()
+                    imagineEngine.updatePreview()
                 }
             )
         ).attachToRecyclerView(binding.lstLayers)
+
+        val imagePicker = registerForActivityResult(
+            ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if (uri != null) {
+                imagineEngine.imageProvider = UriImageProvider(this, uri)
+                imagineEngine.updatePreview()
+            }
+        }
 
         binding.btnPick.setOnClickListener {
             imagePicker.launch(
@@ -93,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnExport.setOnClickListener {
-            binding.imagine.export()
+            imagineEngine.exportBitmap()
         }
 
         binding.btnAddLayer.setOnClickListener {
@@ -101,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             dialog.onAddLayer = {
                 layers.add(it)
                 adapter.data = layers
-                binding.imagine.preview()
+                imagineEngine.updatePreview()
             }
             dialog.show(supportFragmentManager, "AddLayerDialog")
         }
