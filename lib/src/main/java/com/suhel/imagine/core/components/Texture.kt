@@ -1,4 +1,4 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.graphics.Bitmap
 import android.opengl.GLES20
@@ -8,7 +8,7 @@ import com.suhel.imagine.types.Dimension
 import com.suhel.imagine.util.getProxyInt
 import com.suhel.imagine.util.setProxyInt
 
-class Texture @VisibleForTesting constructor(
+internal class Texture @VisibleForTesting constructor(
     val handle: Int,
     val dimension: Dimension,
 ) {

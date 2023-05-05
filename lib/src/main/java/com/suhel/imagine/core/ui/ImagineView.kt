@@ -1,8 +1,9 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.ui
 
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
+import com.suhel.imagine.core.ImagineEngine
 
 class ImagineView @JvmOverloads constructor(
     context: Context,

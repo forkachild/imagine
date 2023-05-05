@@ -1,10 +1,10 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.opengl.GLES20
 import android.util.Log
 import com.suhel.imagine.util.getProxyInt
 
-sealed class Shader {
+internal sealed class Shader {
 
     protected var isReleased: Boolean = false
 

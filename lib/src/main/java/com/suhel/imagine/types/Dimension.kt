@@ -1,6 +1,6 @@
 package com.suhel.imagine.types
 
-data class Dimension(val width: Int, val height: Int) {
+internal data class Dimension(val width: Int, val height: Int) {
 
     val aspectRatio: Float
         get() = width.toFloat() / height
