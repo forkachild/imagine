@@ -4,7 +4,7 @@ Blisteringly fast, highly optimised, easy to use, multi-stage image processing l
 ### Demo
 A beautiful Material You themed simple image editor is provided in the `editor` module. You can refer to the source code of the same and maybe also use it.
 
-![Screencast](assets/screencast.gif)
+<img alt="Screencast" height="30%" src="assets/screencast.gif" width="30%"/>
 
 ## Features
 - `Layer` abstraction representing each processing stage in the pipeline
