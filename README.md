@@ -13,76 +13,106 @@ A beautiful Material You themed simple image editor is provided in the `editor` 
 - Provides a pre-scaled lower resolution preview mode for faster previews and only bumps up resolution during final render
 - Provides a `Bitmap` at final render to be used at your will
 
+## Installation
+Add the source repository
+
+In project level `build.gradle`
+```groovy
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+or in `settings.gradle` in newer gradle
+```groovy
+dependencyResolutionManagement {
+    ...
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+Add the dependency in module level `build.gradle`
+```groovy
+dependencies {
+    ...
+    implementation 'com.github.forkachild:Imagine:1.0.0'
+}
+```
+
 ## Usage
 1. Add `ImagineView` into your layout
-	```xml
-	<com.suhel.imagine.core.ImagineView
-        android:id="@+id/imagineView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-	```
+   ```xml
+   <com.suhel.imagine.core.ImagineView
+       android:id="@+id/imagineView"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent" />
+   ```
 2. Configure `ImagineEngine` and attach to `ImagineView`
-	```kotlin
-	import com.suhel.imagine.core.ImagineView
-	import com.suhel.imagine.core.ImagineEngine
-	
-	private lateinit var imagineView: ImagineView
-	private lateinit var imagineEngine: ImagineEngine
-	
-	override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-	    
-        imagineView = findViewById(R.id.imagineView)
-        imagineEngine = ImagineEngine(imagineView) // Stored in a WeakReference internally
-	    
-        imagineView.engine = imagineEngine
-	}
-	```
+   ```kotlin
+   import com.suhel.imagine.core.ImagineView
+   import com.suhel.imagine.core.ImagineEngine
+   
+   private lateinit var imagineView: ImagineView
+   private lateinit var imagineEngine: ImagineEngine
+   
+   override fun onCreate(savedInstanceState: Bundle?) {
+       super.onCreate(savedInstanceState)
+       setContentView(R.layout.activity_main)
+       
+       imagineView = findViewById(R.id.imagineView)
+       imagineEngine = ImagineEngine(imagineView) // Stored in a WeakReference internally
+       
+       imagineView.engine = imagineEngine
+   }
+   ```
 3. Load an image using an implementation of `ImageProvider` interface
-	```kotlin
-	imagineEngine.imageProvider = UriImageProvider(context, uri) // From ContentResolver Uri
-	imagineEngine.imageProvider = ResImageProvider(context, resId) // Or from a drawable res
-	imagineEngine.imageProvider = // Or your custom ImageProvider implementation
-	```
+   ```kotlin
+   imagineEngine.imageProvider = UriImageProvider(context, uri) // From ContentResolver Uri
+   imagineEngine.imageProvider = ResImageProvider(context, resId) // Or from a drawable res
+   imagineEngine.imageProvider = // Or your custom ImageProvider implementation
+   ```
 4. Create one or more `Layer` objects, writing a `vec4 process(vec4 color)` GLSL function for each
-	```kotlin
-	class SampleLayer: Layer {
-        override val source: String = """
-            vec4 process(vec4 color) {
-                return vec4(color.r, 1.0, color.b, 1.0);
-            }
-        """.trimIndent()
-		
-        override val intensity: Float = 1.0f
-		
-        override fun create(program: Int) {
-            // Optional override to extract your custom uniforms from the shader program
-        }
-		
-        override fun bind(program: Int) {
-            // Optional override to bind your custom uniforms during processing
-        }
-	}
-	```
+   ```kotlin
+   class SampleLayer: Layer {
+       override val source: String = """
+           vec4 process(vec4 color) {
+               return vec4(color.r, 1.0, color.b, 1.0);
+           }
+       """.trimIndent()
+       
+       override val intensity: Float = 1.0f
+       
+       override fun create(program: Int) {
+           // Optional override to extract your custom uniforms from the shader program
+       }
+       
+       override fun bind(program: Int) {
+           // Optional override to bind your custom uniforms during processing
+       }
+   }
+   ```
 5. Assign a list of `Layer` objects to `ImagineEngine`
-	```kotlin
-	imagineEngine.layers = listOf(
-        SampleLayer(),
-        ...
-	)
-	```
+   ```kotlin
+   imagineEngine.layers = listOf(
+       SampleLayer(),
+       ...
+   )
+   ```
 6. Update the viewport preview
-	```kotlin
-	imagineEngine.updatePreview()
-	```
+   ```kotlin
+   imagineEngine.updatePreview()
+   ```
 7. _(Optional)_ Extract a **full resolution** processed bitmap
-	```kotlin
-	imagineEngine.onBitmap = { bitmap ->
-        // Do something with the bitmap and then recycle it
-	}
-	imagineEngine.exportBitmap()
-	```
+   ```kotlin
+   imagineEngine.onBitmap = { bitmap ->
+       // Do something with the bitmap and then recycle it
+   }
+   imagineEngine.exportBitmap()
+   ```
 
 ## TODO
 - [ ] Photoshop like blend mode support for each `Layer`
