@@ -1,4 +1,4 @@
-package com.suhel.imagine.editor.layers
+package com.suhel.imagine.editor.model.layers
 
 import com.suhel.imagine.types.Layer
 

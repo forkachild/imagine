@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.suhel.imagine.editor.databinding.DialogAddLayerBinding
-import com.suhel.imagine.editor.layers.EffectLayer
+import com.suhel.imagine.editor.model.layers.EffectLayer
 
 class AddLayerDialog : BottomSheetDialogFragment() {
 
@@ -31,8 +31,8 @@ class AddLayerDialog : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = AddLayerAdapter()
-        adapter.onAddLayer = {
-            onAddLayer?.invoke(it)
+        adapter.onAddLayer = { factory ->
+            onAddLayer?.invoke(factory())
             dismiss()
         }
 

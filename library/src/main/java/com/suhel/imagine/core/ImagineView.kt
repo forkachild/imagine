@@ -1,4 +1,4 @@
-package com.suhel.imagine.core.ui
+package com.suhel.imagine.core
 
 import android.content.Context
 import android.opengl.GLSurfaceView

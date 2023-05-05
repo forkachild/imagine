@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.google.android.material.slider.Slider.OnChangeListener
 import com.suhel.imagine.editor.R
 import com.suhel.imagine.editor.databinding.ItemLayerBinding
-import com.suhel.imagine.editor.layers.EffectLayer
+import com.suhel.imagine.editor.model.layers.EffectLayer
 
 class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
 

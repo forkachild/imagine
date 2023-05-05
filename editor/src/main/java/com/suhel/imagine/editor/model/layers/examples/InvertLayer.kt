@@ -1,6 +1,6 @@
-package com.suhel.imagine.editor.layers.examples
+package com.suhel.imagine.editor.model.layers.examples
 
-import com.suhel.imagine.editor.layers.EffectLayer
+import com.suhel.imagine.editor.model.layers.EffectLayer
 
 class InvertLayer : EffectLayer(
     "Invert",
