@@ -5,6 +5,8 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView.Renderer
 import android.os.Handler
 import android.os.Looper
+import com.suhel.imagine.core.components.*
+import com.suhel.imagine.core.ui.ImagineView
 import com.suhel.imagine.types.Dimension
 import com.suhel.imagine.types.ImageProvider
 import com.suhel.imagine.types.Layer

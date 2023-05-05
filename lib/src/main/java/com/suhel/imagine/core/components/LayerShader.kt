@@ -1,9 +1,9 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.opengl.GLES20
 import com.suhel.imagine.types.Mat4
 
-sealed class LayerShader(private val shader: Shader.Complete) {
+internal sealed class LayerShader(private val shader: Shader.Complete) {
 
     val program: Int
         get() = shader.program

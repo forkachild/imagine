@@ -1,9 +1,9 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import com.suhel.imagine.types.Layer
 import kotlin.reflect.KClass
 
-class LayerShaderFactory private constructor(
+internal class LayerShaderFactory private constructor(
     val bypassShader: LayerShader.Bypass,
     private val vsQuad: Shader.Partial,
 ) {

@@ -12,7 +12,7 @@ import com.suhel.imagine.core.ImagineEngine
 import com.suhel.imagine.editor.databinding.ActivityMainBinding
 import com.suhel.imagine.editor.helper.BitmapSaveTask
 import com.suhel.imagine.editor.helper.DragSwipeCallback
-import com.suhel.imagine.editor.helper.UriImageProvider
+import com.suhel.imagine.editor.model.UriImageProvider
 import com.suhel.imagine.editor.layers.EffectLayer
 import com.suhel.imagine.editor.model.BitmapSaveFormat
 import com.suhel.imagine.editor.ui.addlayer.AddLayerDialog

@@ -1,13 +1,12 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.opengl.GLES20
 import androidx.annotation.VisibleForTesting
-import com.suhel.imagine.Constants
 import com.suhel.imagine.util.getProxyInt
 import com.suhel.imagine.util.setProxyInt
 
-class Framebuffer @VisibleForTesting constructor(
-    private val handle: Int = Constants.Resources.INVALID_HANDLE
+internal class Framebuffer @VisibleForTesting constructor(
+    private val handle: Int,
 ) {
 
     private var isReleased: Boolean = false

@@ -1,7 +1,7 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import com.suhel.imagine.types.Dimension
 
-class Viewport(
+internal class Viewport(
     val dimension: Dimension,
 )

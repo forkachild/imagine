@@ -1,10 +1,10 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.opengl.GLES20
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class Quad private constructor(
+internal class Quad private constructor(
     private val vboHandle: Int,
     private val iboHandle: Int,
     private val elementCount: Int,

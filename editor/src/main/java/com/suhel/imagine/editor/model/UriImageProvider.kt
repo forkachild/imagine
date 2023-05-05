@@ -1,4 +1,4 @@
-package com.suhel.imagine.editor.helper
+package com.suhel.imagine.editor.model
 
 import android.content.Context
 import android.graphics.Bitmap

@@ -1,4 +1,4 @@
-package com.suhel.imagine.core
+package com.suhel.imagine.core.components
 
 import android.graphics.Bitmap
 import android.opengl.GLES20
@@ -6,7 +6,7 @@ import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.types.Dimension
 import java.nio.ByteBuffer
 
-class Swapchain @VisibleForTesting constructor(
+internal class Swapchain @VisibleForTesting constructor(
     val dimension: Dimension,
     private val textures: List<Texture> = emptyList(),
     private val framebuffers: List<Framebuffer> = emptyList()
