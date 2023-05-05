@@ -6,15 +6,16 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.suhel.imagine.editor.R
 import com.suhel.imagine.editor.databinding.ItemAddLayerBinding
-import com.suhel.imagine.editor.layers.EffectLayer
-import com.suhel.imagine.editor.layers.examples.allLayers
+import com.suhel.imagine.editor.model.layers.EffectLayer
+import com.suhel.imagine.editor.model.layers.EffectLayerFactory
+import com.suhel.imagine.editor.model.layers.examples.allLayers
 
 class AddLayerAdapter : Adapter<AddLayerAdapter.AddLayerViewHolder>() {
 
-    private val data: List<EffectLayer>
+    private val data: List<EffectLayerFactory>
         get() = allLayers
 
-    var onAddLayer: ((EffectLayer) -> Unit)? = null
+    var onAddLayer: ((EffectLayerFactory) -> Unit)? = null
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -41,7 +42,7 @@ class AddLayerAdapter : Adapter<AddLayerAdapter.AddLayerViewHolder>() {
             }
         }
 
-        fun bind(value: EffectLayer) {
+        fun bind(value: EffectLayerFactory) {
             binding.tvName.text = value.name
         }
 

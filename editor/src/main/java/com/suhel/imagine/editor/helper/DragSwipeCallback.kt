@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.color.MaterialColors
+import com.suhel.imagine.editor.R
 
 class DragSwipeCallback(
     context: Context,
@@ -22,7 +23,7 @@ class DragSwipeCallback(
         color = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             MaterialColors.getColor(
                 context,
-                android.R.attr.colorError,
+                com.google.android.material.R.attr.colorErrorContainer,
                 Color.RED
             ) else Color.RED
         style = Paint.Style.FILL

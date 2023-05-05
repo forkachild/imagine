@@ -13,7 +13,7 @@ import com.suhel.imagine.editor.databinding.ActivityMainBinding
 import com.suhel.imagine.editor.helper.BitmapSaveTask
 import com.suhel.imagine.editor.helper.DragSwipeCallback
 import com.suhel.imagine.editor.model.UriImageProvider
-import com.suhel.imagine.editor.layers.EffectLayer
+import com.suhel.imagine.editor.model.layers.EffectLayer
 import com.suhel.imagine.editor.model.BitmapSaveFormat
 import com.suhel.imagine.editor.ui.addlayer.AddLayerDialog
 import com.suhel.imagine.editor.ui.saveformat.BitmapSaveFormatDialog
@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: LayerAdapter
 
     private var saveFormat: BitmapSaveFormat = BitmapSaveFormat.PNG
-
     private val layers: MutableList<EffectLayer> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +33,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupImagine()
+        setupLayerList()
+        setupUI()
+    }
+
+    private fun setupImagine() {
         imagineEngine = ImagineEngine(binding.imagine)
         binding.imagine.engine = imagineEngine
 
@@ -49,16 +54,9 @@ class MainActivity : AppCompatActivity() {
                 )
             ).start()
         }
+    }
 
-        adapter = LayerAdapter()
-        adapter.data = layers
-        adapter.onLayerUpdated = { index, intensity ->
-            layers[index].factor = intensity
-            imagineEngine.updatePreview()
-        }
-
-        binding.lstLayers.layoutManager = LinearLayoutManager(this)
-        binding.lstLayers.adapter = adapter
+    private fun setupLayerList() {
         val itemTouchHelper = ItemTouchHelper(
             DragSwipeCallback(
                 this,
@@ -83,11 +81,22 @@ class MainActivity : AppCompatActivity() {
                 }
             )
         )
+
+        adapter = LayerAdapter()
+        adapter.data = layers
+        adapter.onLayerUpdated = { index, intensity ->
+            layers[index].factor = intensity
+            imagineEngine.updatePreview()
+        }
+        binding.lstLayers.layoutManager = LinearLayoutManager(this)
+        binding.lstLayers.adapter = adapter
         itemTouchHelper.attachToRecyclerView(binding.lstLayers)
         adapter.onStartDrag = {
             itemTouchHelper.startDrag(it)
         }
+    }
 
+    private fun setupUI() {
         val imagePicker = registerForActivityResult(
             ActivityResultContracts.PickVisualMedia()
         ) { uri ->

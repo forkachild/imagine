@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="PICK IMAGE"
+        android:text="PICK"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,7 +24,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btnPick" />
 
-    <com.suhel.imagine.core.ui.ImagineView
+    <com.suhel.imagine.core.ImagineView
         android:id="@+id/imagine"
         android:layout_width="0dp"
         android:layout_height="0dp"

@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView.Renderer
 import android.os.Handler
 import android.os.Looper
 import com.suhel.imagine.core.components.*
-import com.suhel.imagine.core.ui.ImagineView
 import com.suhel.imagine.types.Dimension
 import com.suhel.imagine.types.ImageProvider
 import com.suhel.imagine.types.Layer
@@ -50,6 +49,10 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
 
     private val mainThread = Handler(Looper.getMainLooper())
     private var state: State = State()
+
+    init {
+
+    }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
