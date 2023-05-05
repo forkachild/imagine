@@ -1,6 +1,6 @@
 package com.suhel.imagine.core
 
-import android.opengl.GLES30
+import android.opengl.GLES20
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -13,43 +13,43 @@ class Quad private constructor(
     private var isReleased: Boolean = false
 
     fun draw() = releaseSafe {
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboHandle)
 
-        GLES30.glVertexAttribPointer(
+        GLES20.glVertexAttribPointer(
             LayerShader.aPosition,
             COORDS_PER_VERTEX,
-            GLES30.GL_FLOAT,
+            GLES20.GL_FLOAT,
             false,
             Float.SIZE_BYTES * COORDS_PER_VERTEX * 2,
             0,
         )
-        GLES30.glEnableVertexAttribArray(LayerShader.aPosition)
+        GLES20.glEnableVertexAttribArray(LayerShader.aPosition)
 
-        GLES30.glVertexAttribPointer(
+        GLES20.glVertexAttribPointer(
             LayerShader.aTexCoords,
             COORDS_PER_VERTEX,
-            GLES30.GL_FLOAT,
+            GLES20.GL_FLOAT,
             false,
             Float.SIZE_BYTES * COORDS_PER_VERTEX * 2,
             Float.SIZE_BYTES * COORDS_PER_VERTEX,
         )
-        GLES30.glEnableVertexAttribArray(LayerShader.aTexCoords)
+        GLES20.glEnableVertexAttribArray(LayerShader.aTexCoords)
 
-        GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
-        GLES30.glDrawElements(
-            GLES30.GL_TRIANGLES,
+        GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
+        GLES20.glDrawElements(
+            GLES20.GL_TRIANGLES,
             elementCount,
-            GLES30.GL_UNSIGNED_SHORT,
+            GLES20.GL_UNSIGNED_SHORT,
             0,
         )
 
-        GLES30.glDisableVertexAttribArray(LayerShader.aTexCoords)
-        GLES30.glDisableVertexAttribArray(LayerShader.aPosition)
+        GLES20.glDisableVertexAttribArray(LayerShader.aTexCoords)
+        GLES20.glDisableVertexAttribArray(LayerShader.aPosition)
     }
 
     fun release() = releaseSafe {
         val handles = intArrayOf(vboHandle, iboHandle)
-        GLES30.glDeleteBuffers(handles.size, handles, 0)
+        GLES20.glDeleteBuffers(handles.size, handles, 0)
 
         isReleased = false
     }
@@ -83,7 +83,7 @@ class Quad private constructor(
             )
 
             val bufferArray = IntArray(2)
-            GLES30.glGenBuffers(bufferArray.size, bufferArray, 0)
+            GLES20.glGenBuffers(bufferArray.size, bufferArray, 0)
 
             val vboBuffer = ByteBuffer.allocateDirect(Float.SIZE_BYTES * vertices.size)
                 .order(ByteOrder.nativeOrder())
@@ -92,12 +92,12 @@ class Quad private constructor(
                 .position(0)
 
             val vboHandle = bufferArray[0]
-            GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vboHandle)
-            GLES30.glBufferData(
-                GLES30.GL_ARRAY_BUFFER,
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vboHandle)
+            GLES20.glBufferData(
+                GLES20.GL_ARRAY_BUFFER,
                 Float.SIZE_BYTES * vertices.size,
                 vboBuffer,
-                GLES30.GL_STATIC_DRAW
+                GLES20.GL_STATIC_DRAW
             )
 
             val iboBuffer = ByteBuffer.allocateDirect(Short.SIZE_BYTES * indices.size)
@@ -107,12 +107,12 @@ class Quad private constructor(
                 .position(0)
 
             val iboHandle = bufferArray[1]
-            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
-            GLES30.glBufferData(
-                GLES30.GL_ELEMENT_ARRAY_BUFFER,
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, iboHandle)
+            GLES20.glBufferData(
+                GLES20.GL_ELEMENT_ARRAY_BUFFER,
                 Short.SIZE_BYTES * indices.size,
                 iboBuffer,
-                GLES30.GL_STATIC_DRAW
+                GLES20.GL_STATIC_DRAW
             )
 
             return Quad(vboHandle, iboHandle, indices.size)

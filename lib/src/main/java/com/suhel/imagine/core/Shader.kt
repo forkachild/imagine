@@ -1,6 +1,6 @@
 package com.suhel.imagine.core
 
-import android.opengl.GLES30
+import android.opengl.GLES20
 import android.util.Log
 import com.suhel.imagine.util.getProxyInt
 
@@ -20,18 +20,18 @@ sealed class Shader {
         fun linkWith(other: Partial, releaseOnFailure: Boolean = false): Complete? = releaseSafe {
             if (this == other || this.type == other.type) return@releaseSafe null
 
-            val program = GLES30.glCreateProgram()
-            GLES30.glAttachShader(program, this.shader)
-            GLES30.glAttachShader(program, other.shader)
-            GLES30.glLinkProgram(program)
+            val program = GLES20.glCreateProgram()
+            GLES20.glAttachShader(program, this.shader)
+            GLES20.glAttachShader(program, other.shader)
+            GLES20.glLinkProgram(program)
             val linkStatus = getProxyInt {
-                GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, it, 0)
+                GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, it, 0)
             }
-            if (linkStatus != GLES30.GL_TRUE) {
-                val error = GLES30.glGetProgramInfoLog(program)
-                GLES30.glDeleteProgram(program)
+            if (linkStatus != GLES20.GL_TRUE) {
+                val error = GLES20.glGetProgramInfoLog(program)
+                GLES20.glDeleteProgram(program)
                 if (releaseOnFailure) {
-                    GLES30.glDeleteShader(shader)
+                    GLES20.glDeleteShader(shader)
                     isReleased = true
                 }
                 Log.e(TAG, "Program linking failed: $error")
@@ -43,7 +43,7 @@ sealed class Shader {
 
         override fun release() {
             releaseSafe {
-                GLES30.glDeleteShader(shader)
+                GLES20.glDeleteShader(shader)
                 isReleased = true
             }
         }
@@ -54,13 +54,13 @@ sealed class Shader {
 
         override fun release() {
             releaseSafe {
-                GLES30.glDeleteProgram(program)
+                GLES20.glDeleteProgram(program)
                 isReleased = true
             }
         }
 
         fun use() = releaseSafe {
-            GLES30.glUseProgram(program)
+            GLES20.glUseProgram(program)
         }
 
     }
@@ -71,8 +71,8 @@ sealed class Shader {
 
         val rawValue: Int
             get() = when (this) {
-                Vertex -> GLES30.GL_VERTEX_SHADER
-                Fragment -> GLES30.GL_FRAGMENT_SHADER
+                Vertex -> GLES20.GL_VERTEX_SHADER
+                Fragment -> GLES20.GL_FRAGMENT_SHADER
             }
     }
 
@@ -81,15 +81,15 @@ sealed class Shader {
         private const val TAG = "Shader"
 
         fun compile(source: String, type: Type): Partial? {
-            val shader = GLES30.glCreateShader(type.rawValue)
-            GLES30.glShaderSource(shader, source)
-            GLES30.glCompileShader(shader)
+            val shader = GLES20.glCreateShader(type.rawValue)
+            GLES20.glShaderSource(shader, source)
+            GLES20.glCompileShader(shader)
             val compileStatus = getProxyInt {
-                GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, it, 0)
+                GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, it, 0)
             }
-            if (compileStatus != GLES30.GL_TRUE) {
-                val error = GLES30.glGetShaderInfoLog(shader)
-                GLES30.glDeleteShader(shader)
+            if (compileStatus != GLES20.GL_TRUE) {
+                val error = GLES20.glGetShaderInfoLog(shader)
+                GLES20.glDeleteShader(shader)
                 Log.e(TAG, "Shader compilation error: $error")
                 return null
             }

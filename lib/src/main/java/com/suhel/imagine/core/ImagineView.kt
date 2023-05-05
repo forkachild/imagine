@@ -10,7 +10,7 @@ class ImagineView @JvmOverloads constructor(
 ) : GLSurfaceView(context, attrs) {
 
     init {
-        setEGLContextClientVersion(3)
+        setEGLContextClientVersion(2)
         debugFlags = DEBUG_CHECK_GL_ERROR or DEBUG_LOG_GL_CALLS
         preserveEGLContextOnPause = true
     }
