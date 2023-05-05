@@ -1,24 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.suhel.imagine.core.ImagineView
-        android:id="@+id/imagine"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/lstLayers"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnPick"
+        style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:text="PICK"
-        style="@style/Widget.Material3.Button.TextButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -29,7 +22,31 @@
         android:text="EXPORT"
         android:theme="@style/ThemeOverlay.Material3.Button.TextButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/btnPick" />
+
+    <com.suhel.imagine.core.ImagineView
+        android:id="@+id/imagine"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/lstLayers"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnPick" />
+
+    <TextView
+        android:id="@+id/lblLayersPlaceholder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0.3"
+        android:gravity="center"
+        android:text="No layers added\nTap + to add"
+        android:textColor="?attr/colorOnBackground"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/lstLayers"
+        app:layout_constraintEnd_toEndOf="@+id/lstLayers"
+        app:layout_constraintStart_toStartOf="@+id/lstLayers"
+        app:layout_constraintTop_toTopOf="@+id/lstLayers" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lstLayers"
@@ -40,7 +57,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imagine" />
+        app:layout_constraintTop_toBottomOf="@+id/imagine"
+        tools:listitem="@layout/item_layer" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAddLayer"

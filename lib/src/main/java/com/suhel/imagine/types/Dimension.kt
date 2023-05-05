@@ -1,7 +1,5 @@
 package com.suhel.imagine.types
 
-import android.opengl.GLES30
-
 data class Dimension(val width: Int, val height: Int) {
 
     val aspectRatio: Float
@@ -22,10 +20,6 @@ data class Dimension(val width: Int, val height: Int) {
 
     fun fitInside(container: Dimension): Dimension {
         return fitInside(container.width, container.height)
-    }
-
-    fun setAsViewport() {
-        GLES30.glViewport(0, 0, width, height)
     }
 
     override fun toString(): String {

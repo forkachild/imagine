@@ -1,10 +1,11 @@
-package com.suhel.imagine.types
+package com.suhel.imagine.editor.helper
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
+import com.suhel.imagine.types.ImageProvider
 
 class DrawableImageProvider(
     private val context: Context,

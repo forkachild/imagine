@@ -2,8 +2,8 @@ package com.suhel.imagine.editor.ui.main
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.google.android.material.slider.Slider.OnChangeListener
@@ -20,6 +20,7 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
             notifyDataSetChanged()
         }
 
+    var onStartDrag: ((ViewHolder) -> Unit)? = null
     var onLayerUpdated: ((Int, Float) -> Unit)? = null
 
     override fun onCreateViewHolder(
@@ -33,6 +34,7 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
 
     override fun getItemCount(): Int = data.size
 
+    @SuppressLint("ClickableViewAccessibility")
     inner class LayerViewHolder(parent: ViewGroup) : ViewHolder(
         LayoutInflater
             .from(parent.context)
@@ -48,29 +50,20 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
                         onLayerUpdated?.invoke(adapterPosition, value)
                 }
             )
+            binding.btnDrag.setOnTouchListener { _, event ->
+                if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                    onStartDrag?.invoke(this)
+                    return@setOnTouchListener true
+                }
+
+                false
+            }
         }
 
         fun bind(value: EffectLayer) {
-            binding.tvName.text = value.name.uppercase()
+            binding.tvName.text = value.name
             binding.sldIntensity.value = value.factor
         }
-
-    }
-
-    class ListDiff<T>(
-        private val oldList: List<T>,
-        private val newList: List<T>,
-    ) : DiffUtil.Callback() {
-
-        override fun getOldListSize(): Int = oldList.size
-
-        override fun getNewListSize(): Int = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldList[oldItemPosition] == newList[newItemPosition]
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldList[oldItemPosition] == newList[newItemPosition]
 
     }
 

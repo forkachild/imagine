@@ -1,7 +1,7 @@
 package com.suhel.imagine.core
 
 import android.graphics.Bitmap
-import android.opengl.GLES30
+import android.opengl.GLES20
 import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.types.Dimension
 import java.nio.ByteBuffer
@@ -34,13 +34,13 @@ class Swapchain @VisibleForTesting constructor(
         get() = ByteBuffer
             .allocateDirect(dimension.width * dimension.height * 4)
             .let { buffer ->
-                GLES30.glReadPixels(
+                GLES20.glReadPixels(
                     0,
                     0,
                     dimension.width,
                     dimension.height,
-                    GLES30.GL_RGBA,
-                    GLES30.GL_UNSIGNED_BYTE,
+                    GLES20.GL_RGBA,
+                    GLES20.GL_UNSIGNED_BYTE,
                     buffer
                 )
 

@@ -1,7 +1,7 @@
 package com.suhel.imagine.core
 
 import android.graphics.Bitmap
-import android.opengl.GLES30
+import android.opengl.GLES20
 import android.opengl.GLSurfaceView.Renderer
 import android.os.Handler
 import android.os.Looper
@@ -50,7 +50,7 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
     private var state: State = State()
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        GLES30.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         state = state.copy(
             isReady = true,
             shaderFactory = LayerShaderFactory.create(),
@@ -160,14 +160,12 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
                 val isInverted = isFirstIndex && !isPendingExport
 
                 val texture = if (isFirstIndex) image else swapchain.texture
-                val framebuffer =
-                    if (isFrontBuffer) Framebuffer.default else swapchain.framebuffer
-                val dimension =
-                    if (isFrontBuffer) viewport.dimension else swapchain.dimension
+                val framebuffer = if (isFrontBuffer) Framebuffer.default else swapchain.framebuffer
+                val dimension = if (isFrontBuffer) viewport.dimension else swapchain.dimension
 
-                dimension.setAsViewport()
+                GLES20.glViewport(0, 0, dimension.width, dimension.height)
                 framebuffer.bind()
-                framebuffer.clear()
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
                 renderLayer(
                     layer,
@@ -179,8 +177,6 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
                     isFrontBuffer,
                     isInverted,
                 )
-
-                swapchain.next()
             }
 
             if (isPendingExport) {
@@ -196,10 +192,8 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
                 )
             }
         } else {
-            Framebuffer.default.apply {
-                bind()
-                clear()
-            }
+            Framebuffer.default.bind()
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
             renderBypass(
                 quad,
