@@ -1,6 +1,11 @@
 # Imagine
 Blisteringly fast, highly optimised, easy to use, multi-stage image processing library for Android using OpenGL ES 2.0.
 
+### Demo
+A beautiful Material You themed simple image editor is provided in the `editor` module. You can refer to the source code of the same and maybe also use it.
+
+![Screencast](assets/screencast.gif)
+
 ## Features
 - `Layer` abstraction representing each processing stage in the pipeline
 - Write only a single function in GLSL to manipulate per-pixel color
@@ -9,11 +14,6 @@ Blisteringly fast, highly optimised, easy to use, multi-stage image processing l
 - Provides a `Bitmap` at final render to be used at your will
 
 ## Usage
-
-### Demo
-A beautiful Material You themed simple image editor is provided in the `editor` module. You can refer to the source code of the same and maybe also use it.
-
-### Steps
 1. Add `ImagineView` into your layout
 	```xml
 	<com.suhel.imagine.core.ImagineView
