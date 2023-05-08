@@ -1,15 +1,15 @@
-package com.suhel.imagine.core.components
+package com.suhel.imagine.core.objects
 
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import androidx.annotation.VisibleForTesting
-import com.suhel.imagine.types.Dimension
+import com.suhel.imagine.core.types.ImagineDimensions
 import java.nio.ByteBuffer
 
-internal class Swapchain @VisibleForTesting constructor(
-    val dimension: Dimension,
-    private val textures: List<Texture> = emptyList(),
-    private val framebuffers: List<Framebuffer> = emptyList()
+internal class ImagineSwapchain @VisibleForTesting constructor(
+    val dimensions: ImagineDimensions,
+    private val textures: List<ImagineTexture> = emptyList(),
+    private val framebuffers: List<ImagineFramebuffer> = emptyList()
 ) {
 
     private var index: Int = 0
@@ -18,13 +18,13 @@ internal class Swapchain @VisibleForTesting constructor(
     private val nextIndex: Int
         get() = (index + 1) % LENGTH
 
-    val framebuffer: Framebuffer
+    val framebuffer: ImagineFramebuffer
         get() {
             throwIfReleased()
             return framebuffers[nextIndex]
         }
 
-    val texture: Texture
+    val texture: ImagineTexture
         get() {
             throwIfReleased()
             return textures[index]
@@ -32,28 +32,28 @@ internal class Swapchain @VisibleForTesting constructor(
 
     val bitmap: Bitmap
         get() = ByteBuffer
-            .allocateDirect(dimension.width * dimension.height * 4)
+            .allocateDirect(dimensions.width * dimensions.height * 4)
             .let { buffer ->
                 GLES20.glReadPixels(
                     0,
                     0,
-                    dimension.width,
-                    dimension.height,
+                    dimensions.width,
+                    dimensions.height,
                     GLES20.GL_RGBA,
                     GLES20.GL_UNSIGNED_BYTE,
                     buffer
                 )
 
                 Bitmap.createBitmap(
-                    dimension.width,
-                    dimension.height,
+                    dimensions.width,
+                    dimensions.height,
                     Bitmap.Config.ARGB_8888
                 ).apply {
                     copyPixelsFromBuffer(buffer)
                 }
             }
 
-    fun next() {
+    fun swap() {
         index = nextIndex
     }
 
@@ -75,15 +75,15 @@ internal class Swapchain @VisibleForTesting constructor(
 
         private const val LENGTH: Int = 2
 
-        fun create(dimension: Dimension): Swapchain {
-            val textures = Texture.create(LENGTH, dimension)
-            val framebuffers = Framebuffer.obtain(LENGTH)
+        fun create(dimensions: ImagineDimensions): ImagineSwapchain {
+            val textures = ImagineTexture.create(LENGTH, dimensions)
+            val framebuffers = ImagineFramebuffer.obtain(LENGTH)
 
             repeat(LENGTH) { index ->
                 framebuffers[index].attachTexture(textures[index])
             }
 
-            return Swapchain(dimension, textures, framebuffers)
+            return ImagineSwapchain(dimensions, textures, framebuffers)
         }
 
     }

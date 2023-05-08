@@ -1,30 +1,37 @@
 package com.suhel.imagine.core
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView.Renderer
 import android.os.Handler
 import android.os.Looper
-import com.suhel.imagine.core.components.*
-import com.suhel.imagine.types.Dimension
-import com.suhel.imagine.types.ImageProvider
-import com.suhel.imagine.types.Layer
-import com.suhel.imagine.types.Mat4
-import java.lang.ref.WeakReference
+import com.google.android.material.R
+import com.google.android.material.color.MaterialColors
+import com.suhel.imagine.core.objects.ImagineFramebuffer
+import com.suhel.imagine.core.objects.ImagineLayerShader
+import com.suhel.imagine.core.objects.ImagineLayerShaderFactory
+import com.suhel.imagine.core.objects.ImagineQuad
+import com.suhel.imagine.core.objects.ImagineSwapchain
+import com.suhel.imagine.core.objects.ImagineTexture
+import com.suhel.imagine.core.objects.ImagineViewport
+import com.suhel.imagine.core.types.ImagineDimensions
+import com.suhel.imagine.core.types.ImagineImageProvider
+import com.suhel.imagine.core.types.ImagineLayer
+import com.suhel.imagine.core.types.ImagineMatrix
+import com.suhel.imagine.util.weakRefOf
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class ImagineEngine(imagineView: ImagineView) : Renderer {
 
-    var layers: List<Layer>?
+    var layers: List<ImagineLayer>?
         get() = state.layers
         set(value) {
-            state = state.copy(
-                layers = value,
-            )
+            state = state.copy(layers = value)
         }
 
-    var imageProvider: ImageProvider?
+    var imageProvider: ImagineImageProvider?
         get() = state.imageProvider
         set(value) {
             state = state.copy(
@@ -38,61 +45,67 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
     var onBitmap: ((Bitmap) -> Unit)?
         get() = state.onBitmap
         set(value) {
-            state = state.copy(
-                onBitmap = value,
-            )
+            state = state.copy(onBitmap = value)
         }
 
-    private val weakImagineView: WeakReference<ImagineView> = WeakReference(imagineView)
-    private val imagineView: ImagineView?
-        get() = weakImagineView.get()
-
-    private val mainThread = Handler(Looper.getMainLooper())
+    private val imagineView by weakRefOf(imagineView)
+    private var renderContext: RenderContext = RenderContext.Blank
     private var state: State = State()
-
-    init {
-
-    }
+        set(value) {
+            field = value
+            renderContext = value.renderContext
+        }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        updateSurfaceColor()
+
         state = state.copy(
             isReady = true,
-            shaderFactory = LayerShaderFactory.create(),
-            quad = Quad.create(),
+            shaderFactory = ImagineLayerShaderFactory.create(),
+            quad = ImagineQuad.create(),
         )
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        val oldDimension = state.viewport?.dimension
-        val newDimension = Dimension(width, height)
+        val oldDimensions = state.viewport?.dimensions
+        val newDimensions = ImagineDimensions(width, height)
 
-        if (oldDimension == newDimension) return
-
-        state = state.copy(
-            viewport = Viewport(newDimension),
-            isPendingSwapchainUpdate = true,
-            isPendingAspectRatioMatrixUpdate = true,
-        )
+        if (oldDimensions != newDimensions)
+            updateViewport(newDimensions)
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        updateResources()
-        renderLayers()
+        runPendingOperations()
+        draw()
+    }
+
+    fun exportBitmap() {
+        state = state.copy(isPendingExport = true)
+        imagineView?.requestRender()
     }
 
     fun updatePreview() {
         imagineView?.requestRender()
     }
 
-    fun exportBitmap() {
-        state = state.copy(
-            isPendingExport = true,
+    private fun updateSurfaceColor() {
+        val color = imagineView?.let {
+            MaterialColors.getColor(it, R.attr.colorSurface, Color.BLACK)
+        } ?: Color.BLACK
+
+        val red = (color shr 16) and 0xFF
+        val green = (color shr 8) and 0xFF
+        val blue = color and 0xFF
+
+        GLES20.glClearColor(
+            red.toFloat() / 255,
+            green.toFloat() / 255,
+            blue.toFloat() / 255,
+            1.0f
         )
-        imagineView?.requestRender()
     }
 
-    private fun updateResources() {
+    private fun runPendingOperations() {
         updateTexture()
         updateSwapchain()
         updateAspectRatioMatrix()
@@ -105,7 +118,7 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
             state = state.copy(
                 isPendingTextureUpdate = false,
                 image = state.imageProvider?.bitmap?.let { bitmap ->
-                    Texture.create(bitmap, mipmap = true, recycleBitmap = true)
+                    ImagineTexture.create(bitmap, mipmap = true, recycleBitmap = true)
                 },
             )
         }
@@ -121,7 +134,9 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
             state = state.copy(
                 isPendingSwapchainUpdate = false,
                 swapchain = if (texture != null && viewport != null)
-                    Swapchain.create(texture.dimension.fitInside(viewport.dimension))
+                    ImagineSwapchain.create(
+                        texture.dimensions.fitInside(viewport.dimensions)
+                    )
                 else null,
             )
         }
@@ -135,145 +150,212 @@ class ImagineEngine(imagineView: ImagineView) : Renderer {
             state = state.copy(
                 isPendingAspectRatioMatrixUpdate = false,
                 aspectRatioMatrix = if (image != null && viewport != null)
-                    Mat4.ofAspectFit(image.dimension.aspectRatio, viewport.dimension.aspectRatio)
+                    ImagineMatrix.ofAspectFit(
+                        image.dimensions.aspectRatio,
+                        viewport.dimensions.aspectRatio
+                    )
                 else null,
             )
         }
     }
 
-    private fun renderLayers() {
-        if (!state.isReady) return
+    private fun updateViewport(dimensions: ImagineDimensions) {
+        state = state.copy(
+            viewport = ImagineViewport(dimensions),
+            isPendingSwapchainUpdate = true,
+            isPendingAspectRatioMatrixUpdate = true,
+        )
+    }
 
-        val shaderFactory = state.shaderFactory ?: return
-        val quad = state.quad ?: return
-        val aspectRatioMatrix = state.aspectRatioMatrix ?: return
-        val image = state.image ?: return
-        val viewport = state.viewport ?: return
-        val layers = state.layers
+    private fun draw() {
+        renderContext.draw()
 
-        if (layers != null && layers.isNotEmpty()) {
-            val onBitmap = state.onBitmap
-            val isPendingExport = state.isPendingExport && onBitmap != null
-            val swapchain = if (isPendingExport)
-                Swapchain.create(image.dimension) else (state.swapchain ?: return)
-
-            layers.forEachIndexed { index, layer ->
-                val isFirstIndex = index == 0
-                val isLastIndex = index == layers.lastIndex
-
-                val isFrontBuffer = isLastIndex && !isPendingExport
-                val isInverted = isFirstIndex && !isPendingExport
-
-                val texture = if (isFirstIndex) image else swapchain.texture
-                val framebuffer = if (isFrontBuffer) Framebuffer.default else swapchain.framebuffer
-                val dimension = if (isFrontBuffer) viewport.dimension else swapchain.dimension
-
-                GLES20.glViewport(0, 0, dimension.width, dimension.height)
-                framebuffer.bind()
-                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-
-                renderLayer(
-                    layer,
-                    quad,
-                    texture,
-                    shaderFactory,
-                    swapchain,
-                    aspectRatioMatrix,
-                    isFrontBuffer,
-                    isInverted,
-                )
-            }
-
-            if (isPendingExport) {
-                val bitmap = swapchain.bitmap
-                swapchain.release()
-
-                mainThread.post {
-                    onBitmap!!(bitmap)
-                }
-
-                state = state.copy(
-                    isPendingExport = false,
-                )
-            }
-        } else {
-            Framebuffer.default.bind()
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-
-            renderBypass(
-                quad,
-                image,
-                shaderFactory,
-                aspectRatioMatrix,
-            )
+        if (state.isPendingExport) {
+            state = state.copy(isPendingExport = false)
         }
     }
 
-    private fun renderLayer(
-        layer: Layer,
-        quad: Quad,
-        texture: Texture,
-        shaderFactory: LayerShaderFactory,
-        swapchain: Swapchain,
-        aspectRatioMatrix: Mat4,
-        isFrontBuffer: Boolean,
-        isInverted: Boolean,
-    ) {
-        val shader = shaderFactory.getLayerShader(layer) ?: return
-
-        shader.use()
-        shader.setAspectRatioMatrix(if (isFrontBuffer) aspectRatioMatrix else UnitMatrix)
-        shader.setInvertMatrix(if (isInverted) InvertMatrix else UnitMatrix)
-        shader.setImage(texture)
-        shader.setIntensity(layer.intensity.coerceIn(0.0f, 1.0f))
-
-        // Bind layer variables
-        layer.bind(shader.program)
-
-        // Finally draw!
-        quad.draw()
-
-        // Switch to next image in swapchain
-        swapchain.next()
-    }
-
-    private fun renderBypass(
-        quad: Quad,
-        texture: Texture,
-        shaderFactory: LayerShaderFactory,
-        aspectRatioMatrix: Mat4,
-    ) {
-        val shader = shaderFactory.bypassShader
-
-        shader.use()
-        shader.setAspectRatioMatrix(aspectRatioMatrix)
-        shader.setInvertMatrix(InvertMatrix)
-        shader.setImage(texture)
-
-        // Finally draw!
-        quad.draw()
-    }
-
-    private data class State(
+    internal data class State(
+        val mainThreadHandler: Handler = Handler(Looper.getMainLooper()),
         val isReady: Boolean = false,
         val isPendingExport: Boolean = false,
         val isPendingTextureUpdate: Boolean = false,
         val isPendingSwapchainUpdate: Boolean = false,
         val isPendingAspectRatioMatrixUpdate: Boolean = false,
-        val shaderFactory: LayerShaderFactory? = null,
-        val quad: Quad? = null,
-        val viewport: Viewport? = null,
-        val layers: List<Layer>? = null,
-        val imageProvider: ImageProvider? = null,
-        val image: Texture? = null,
-        val swapchain: Swapchain? = null,
-        val aspectRatioMatrix: Mat4? = null,
+        val quad: ImagineQuad? = null,
+        val shaderFactory: ImagineLayerShaderFactory? = null,
+        val layers: List<ImagineLayer>? = null,
+        val viewport: ImagineViewport? = null,
         val onBitmap: ((Bitmap) -> Unit)? = null,
-    )
+        val imageProvider: ImagineImageProvider? = null,
+        val image: ImagineTexture? = null,
+        val swapchain: ImagineSwapchain? = null,
+        val aspectRatioMatrix: ImagineMatrix? = null,
+    ) {
 
-    companion object {
-        private val UnitMatrix: Mat4 = Mat4.ofUnit()
-        private val InvertMatrix: Mat4 = Mat4.ofScale(1.0f, -1.0f, 1.0f)
+        val renderContext: RenderContext
+            get() {
+                if (!isReady
+                    || isPendingTextureUpdate
+                    || isPendingSwapchainUpdate
+                    || isPendingAspectRatioMatrixUpdate
+                    || quad == null
+                    || viewport == null
+                    || swapchain == null
+                    || shaderFactory == null
+                    || image == null
+                    || aspectRatioMatrix == null
+                ) return RenderContext.Blank
+
+                if (isPendingExport && layers != null && onBitmap != null)
+                    return RenderContext.Output(
+                        quad,
+                        image,
+                        shaderFactory,
+                        layers,
+                        mainThreadHandler,
+                        onBitmap
+                    )
+
+                return RenderContext.Preview(
+                    quad,
+                    image,
+                    shaderFactory,
+                    viewport,
+                    swapchain,
+                    layers,
+                    aspectRatioMatrix,
+                )
+            }
+
+    }
+
+    internal sealed class RenderContext {
+
+        abstract fun draw()
+
+        protected fun drawActual(
+            quad: ImagineQuad,
+            shader: ImagineLayerShader,
+            framebuffer: ImagineFramebuffer,
+            dimensions: ImagineDimensions,
+            texture: ImagineTexture,
+            aspectRatioMatrix: ImagineMatrix,
+            invertMatrix: ImagineMatrix,
+            intensity: Float = 1.0f,
+        ) {
+            shader.use()
+            shader.bindAspectRatioMatrix(aspectRatioMatrix)
+            shader.bindInvertMatrix(invertMatrix)
+            shader.bindImage(texture)
+            shader.bindIntensity(intensity)
+
+            framebuffer.bind()
+            GLES20.glViewport(0, 0, dimensions.width, dimensions.height)
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            quad.draw()
+        }
+
+        internal object Blank : RenderContext() {
+
+            override fun draw() {
+                ImagineFramebuffer.default.bind()
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            }
+
+        }
+
+        internal class Preview(
+            private val quad: ImagineQuad,
+            private val image: ImagineTexture,
+            private val shaderFactory: ImagineLayerShaderFactory,
+            private val viewport: ImagineViewport,
+            private val swapchain: ImagineSwapchain,
+            private val layers: List<ImagineLayer>?,
+            private val aspectRatioMatrix: ImagineMatrix,
+        ) : RenderContext() {
+
+            override fun draw() {
+                if (layers.isNullOrEmpty()) {
+                    drawActual(
+                        quad,
+                        shaderFactory.bypassShader,
+                        ImagineFramebuffer.default,
+                        viewport.dimensions,
+                        image,
+                        aspectRatioMatrix,
+                        ImagineMatrix.invertY,
+                    )
+                } else {
+                    layers.forEachIndexed { index, layer ->
+                        val isSourceImage = index == 0
+                        val isFrontBuffer = index == layers.lastIndex
+                        val isInverted = index == 0
+                        val shader = shaderFactory.getLayerShader(layer) ?: return@forEachIndexed
+
+                        layer.bind(shader.program)
+
+                        drawActual(
+                            quad,
+                            shader,
+                            if (isFrontBuffer) ImagineFramebuffer.default else swapchain.framebuffer,
+                            if (isFrontBuffer) viewport.dimensions else swapchain.dimensions,
+                            if (isSourceImage) image else swapchain.texture,
+                            if (isFrontBuffer) aspectRatioMatrix else ImagineMatrix.identity,
+                            if (isInverted) ImagineMatrix.invertY else ImagineMatrix.identity,
+                            layer.intensity,
+                        )
+
+                        swapchain.swap()
+                    }
+                }
+            }
+
+        }
+
+        internal class Output(
+            private val quad: ImagineQuad,
+            private val image: ImagineTexture,
+            private val shaderFactory: ImagineLayerShaderFactory,
+            private val layers: List<ImagineLayer>,
+            private val mainThreadHandler: Handler,
+            private val onBitmap: (Bitmap) -> Unit,
+        ) : RenderContext() {
+
+            override fun draw() {
+                val swapchain = ImagineSwapchain.create(image.dimensions)
+                GLES20.glViewport(0, 0, image.dimensions.width, image.dimensions.height)
+
+                layers.forEachIndexed { index, layer ->
+                    val isSourceImage = index == 0
+                    val shader = shaderFactory.getLayerShader(layer) ?: return@forEachIndexed
+
+                    layer.bind(shader.program)
+
+                    drawActual(
+                        quad,
+                        shader,
+                        swapchain.framebuffer,
+                        image.dimensions,
+                        if (isSourceImage) image else swapchain.texture,
+                        ImagineMatrix.identity,
+                        ImagineMatrix.identity,
+                        layer.intensity,
+                    )
+
+                    swapchain.swap()
+                }
+
+                val bitmap = swapchain.bitmap
+                swapchain.release()
+
+                mainThreadHandler.post {
+                    onBitmap(bitmap)
+                }
+            }
+
+        }
+
     }
 
 }

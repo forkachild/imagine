@@ -1,17 +1,17 @@
-package com.suhel.imagine.core.components
+package com.suhel.imagine.core.objects
 
 import android.opengl.GLES20
 import androidx.annotation.VisibleForTesting
 import com.suhel.imagine.util.getProxyInt
 import com.suhel.imagine.util.setProxyInt
 
-internal class Framebuffer @VisibleForTesting constructor(
+internal class ImagineFramebuffer @VisibleForTesting constructor(
     private val handle: Int,
 ) {
 
     private var isReleased: Boolean = false
 
-    fun attachTexture(texture: Texture) {
+    fun attachTexture(texture: ImagineTexture) {
         throwIfReleased()
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, handle)
         GLES20.glFramebufferTexture2D(
@@ -43,21 +43,21 @@ internal class Framebuffer @VisibleForTesting constructor(
 
     companion object {
 
-        val default = Framebuffer(0)
+        val default = ImagineFramebuffer(0)
 
-        fun obtain(): Framebuffer {
+        fun obtain(): ImagineFramebuffer {
             val framebufferHandle = getProxyInt {
                 GLES20.glGenFramebuffers(1, it, 0)
             }
 
-            return Framebuffer(framebufferHandle)
+            return ImagineFramebuffer(framebufferHandle)
         }
 
-        fun obtain(count: Int): List<Framebuffer> {
+        fun obtain(count: Int): List<ImagineFramebuffer> {
             val framebufferHandles = IntArray(count)
             GLES20.glGenFramebuffers(count, framebufferHandles, 0)
 
-            return framebufferHandles.map { Framebuffer(it) }
+            return framebufferHandles.map { ImagineFramebuffer(it) }
         }
 
     }
