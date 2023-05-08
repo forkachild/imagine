@@ -1,10 +1,10 @@
-package com.suhel.imagine.core.components
+package com.suhel.imagine.core.objects
 
 import android.opengl.GLES20
 import android.util.Log
 import com.suhel.imagine.util.getProxyInt
 
-internal sealed class Shader {
+sealed class ImagineShader {
 
     protected var isReleased: Boolean = false
 
@@ -15,9 +15,9 @@ internal sealed class Shader {
     class Partial(
         private val shader: Int,
         private val type: Type
-    ) : Shader() {
+    ) : ImagineShader() {
 
-        fun linkWith(other: Partial, releaseOnFailure: Boolean = false): Complete? = releaseSafe {
+        fun linkWith(other: Partial, releaseOnFailure: Boolean = false): Program? = releaseSafe {
             if (this == other || this.type == other.type) return@releaseSafe null
 
             val program = GLES20.glCreateProgram()
@@ -38,7 +38,7 @@ internal sealed class Shader {
                 return@releaseSafe null
             }
 
-            Complete(program)
+            Program(program)
         }
 
         override fun release() {
@@ -50,7 +50,7 @@ internal sealed class Shader {
 
     }
 
-    class Complete(val program: Int) : Shader() {
+    class Program(val program: Int) : ImagineShader() {
 
         override fun release() {
             releaseSafe {

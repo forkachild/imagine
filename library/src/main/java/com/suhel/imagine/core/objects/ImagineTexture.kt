@@ -1,16 +1,16 @@
-package com.suhel.imagine.core.components
+package com.suhel.imagine.core.objects
 
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import androidx.annotation.VisibleForTesting
-import com.suhel.imagine.types.Dimension
+import com.suhel.imagine.core.types.ImagineDimensions
 import com.suhel.imagine.util.getProxyInt
 import com.suhel.imagine.util.setProxyInt
 
-internal class Texture @VisibleForTesting constructor(
+internal class ImagineTexture @VisibleForTesting constructor(
     val handle: Int,
-    val dimension: Dimension,
+    val dimensions: ImagineDimensions,
 ) {
 
     private var isReleased: Boolean = false
@@ -31,7 +31,7 @@ internal class Texture @VisibleForTesting constructor(
 
     companion object {
 
-        fun create(dimension: Dimension): Texture {
+        fun create(dimensions: ImagineDimensions): ImagineTexture {
             val textureHandle = getProxyInt { GLES20.glGenTextures(1, it, 0) }
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle)
             configure(false)
@@ -39,18 +39,18 @@ internal class Texture @VisibleForTesting constructor(
                 GLES20.GL_TEXTURE_2D,
                 0,
                 GLES20.GL_RGBA,
-                dimension.width,
-                dimension.height,
+                dimensions.width,
+                dimensions.height,
                 0,
                 GLES20.GL_RGBA,
                 GLES20.GL_UNSIGNED_BYTE,
                 null
             )
 
-            return Texture(textureHandle, dimension)
+            return ImagineTexture(textureHandle, dimensions)
         }
 
-        fun create(count: Int, dimension: Dimension): List<Texture> {
+        fun create(count: Int, dimensions: ImagineDimensions): List<ImagineTexture> {
             val textureHandles = IntArray(count)
             GLES20.glGenTextures(count, textureHandles, 0)
 
@@ -61,8 +61,8 @@ internal class Texture @VisibleForTesting constructor(
                     GLES20.GL_TEXTURE_2D,
                     0,
                     GLES20.GL_RGBA,
-                    dimension.width,
-                    dimension.height,
+                    dimensions.width,
+                    dimensions.height,
                     0,
                     GLES20.GL_RGBA,
                     GLES20.GL_UNSIGNED_BYTE,
@@ -70,23 +70,23 @@ internal class Texture @VisibleForTesting constructor(
                 )
             }
 
-            return textureHandles.map { Texture(it, dimension) }
+            return textureHandles.map { ImagineTexture(it, dimensions) }
         }
 
         fun create(
             bitmap: Bitmap,
             mipmap: Boolean = false,
             recycleBitmap: Boolean = false
-        ): Texture {
+        ): ImagineTexture {
             val textureHandle = getProxyInt { GLES20.glGenTextures(1, it, 0) }
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle)
             configure(mipmap)
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
             if (mipmap) GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D)
-            val dimension = Dimension(bitmap.width, bitmap.height)
+            val dimensions = ImagineDimensions(bitmap.width, bitmap.height)
             if (recycleBitmap) bitmap.recycle()
 
-            return Texture(textureHandle, dimension)
+            return ImagineTexture(textureHandle, dimensions)
         }
 
         private fun configure(mipmap: Boolean) {

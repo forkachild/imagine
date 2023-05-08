@@ -1,24 +1,23 @@
-package com.suhel.imagine.core.components
+package com.suhel.imagine.core.objects
 
-import com.suhel.imagine.types.Layer
+import com.suhel.imagine.core.types.ImagineLayer
 import kotlin.reflect.KClass
 
-internal class LayerShaderFactory private constructor(
-    val bypassShader: LayerShader.Bypass,
-    private val vsQuad: Shader.Partial,
+internal class ImagineLayerShaderFactory private constructor(
+    val bypassShader: ImagineLayerShader,
+    private val vsQuad: ImagineShader.Partial,
 ) {
     private var isReleased: Boolean = false
-    private val layerShaderMap: MutableMap<KClass<out Layer>, LayerShader.Layer> =
+    private val layerShaderMap: MutableMap<KClass<out ImagineLayer>, ImagineLayerShader> =
         mutableMapOf()
 
-    fun getLayerShader(layer: Layer): LayerShader.Layer? = safeCall {
+    fun getLayerShader(layer: ImagineLayer): ImagineLayerShader? = safeCall {
         layerShaderMap[layer::class] ?: run {
             val source = "$FS_LAYER_SOURCE_HEADER\n\n${layer.source}\n\n$FS_LAYER_SOURCE_FOOTER"
-            val program = Shader
-                .compile(source, Shader.Type.Fragment)
+            val program = ImagineShader.compile(source, ImagineShader.Type.Fragment)
                 ?.linkWith(vsQuad, true) ?: return@run null
 
-            LayerShader.Layer(program).also {
+            ImagineLayerShader(program).also {
                 layerShaderMap[layer::class] = it
             }
         }
@@ -88,13 +87,12 @@ internal class LayerShaderFactory private constructor(
             }
         """.trimIndent()
 
-        fun create(): LayerShaderFactory? {
-            val vsQuad = Shader.compile(VS_QUAD_SOURCE, Shader.Type.Vertex) ?: return null
-            val copyShader = Shader
-                .compile(FS_COPY_SOURCE, Shader.Type.Fragment)
+        fun create(): ImagineLayerShaderFactory? {
+            val vsQuad = ImagineShader.compile(VS_QUAD_SOURCE, ImagineShader.Type.Vertex) ?: return null
+            val copyShader = ImagineShader.compile(FS_COPY_SOURCE, ImagineShader.Type.Fragment)
                 ?.linkWith(vsQuad, true) ?: return null
 
-            return LayerShaderFactory(LayerShader.Bypass(copyShader), vsQuad)
+            return ImagineLayerShaderFactory(ImagineLayerShader(copyShader), vsQuad)
         }
 
     }

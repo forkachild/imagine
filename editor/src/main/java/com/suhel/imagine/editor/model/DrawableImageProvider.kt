@@ -5,12 +5,12 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
-import com.suhel.imagine.types.ImageProvider
+import com.suhel.imagine.core.types.ImagineImageProvider
 
 class DrawableImageProvider(
     private val context: Context,
     @DrawableRes private val resId: Int
-) : ImageProvider {
+) : ImagineImageProvider {
 
     override val bitmap: Bitmap
         get() = (ResourcesCompat.getDrawable(
