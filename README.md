@@ -1,4 +1,6 @@
 # Imagine
+[![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
+
 Blisteringly fast, highly optimised, easy to use, multi-stage image processing library for Android using OpenGL ES 2.0.
 
 ### Demo
