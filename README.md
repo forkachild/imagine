@@ -1,7 +1,7 @@
 # Imagine
 [![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
 
-GPU accelerate, blisteringly fast, highly optimised, easy-to-use, layer based image editing library for Android using OpenGL ES 2.0
+GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library for Android using OpenGL ES 2.0
 
 ### Blog
 I have written a blog on the entire story of this library. Check it out here [Imagine: A story of the evergreen OpenGL on Android](https://medium.com/@suhelchakraborty/imagine-a-story-of-the-evergreen-opengl-on-android-c36b4e8463f0)
