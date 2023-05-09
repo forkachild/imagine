@@ -44,7 +44,7 @@ Add the dependency in module level `build.gradle`
 ```groovy
 dependencies {
     ...
-    implementation 'com.github.forkachild:imagine:1.0.1'
+    implementation 'com.github.forkachild:imagine:1.0.2'
 }
 ```
 
