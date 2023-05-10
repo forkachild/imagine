@@ -3,9 +3,20 @@ package com.suhel.imagine.util
 import java.lang.ref.WeakReference
 import kotlin.reflect.KProperty
 
-fun <T> weakRefOf(obj: T) = WeakReferenceDelegate(obj)
+/**
+ * Create delegated read-only nullable property backed by a [WeakReference] to
+ * a passed object
+ *
+ * @param obj The object to wrap in a [WeakReference]
+ */
+internal fun <T> weakRefOf(obj: T) = WeakReferenceDelegate(obj)
 
-class WeakReferenceDelegate<T>(obj: T) {
+/**
+ * Delegated read-only nullable property wrapper that wraps an object inside a [WeakReference]
+ *
+ * @param obj The object to wrap in a [WeakReference]
+ */
+internal class WeakReferenceDelegate<T>(obj: T) {
     private val ref: WeakReference<T> = WeakReference(obj)
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T? = ref.get()
