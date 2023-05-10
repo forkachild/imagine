@@ -56,7 +56,7 @@ dependencies {
        android:layout_width="match_parent"
        android:layout_height="match_parent" />
    ```
-2. Configure `ImagineEngine` and attach to `ImagineView`
+2. Configure `ImagineEngine`
    ```kotlin
    import com.suhel.imagine.core.ImagineView
    import com.suhel.imagine.core.ImagineEngine
@@ -70,15 +70,13 @@ dependencies {
        
        imagineView = findViewById(R.id.imagineView)
        imagineEngine = ImagineEngine(imagineView) // Stored in a WeakReference internally
-       
-       imagineView.engine = imagineEngine
    }
    ```
 3. Load an image using an implementation of `ImageProvider` interface
    ```kotlin
    imagineEngine.imageProvider = UriImageProvider(context, uri) // From ContentResolver Uri
    imagineEngine.imageProvider = ResImageProvider(context, resId) // Or from a drawable res
-   imagineEngine.imageProvider = // Or your custom ImageProvider implementation
+   imagineEngine.imageProvider = ... // Or your custom ImageProvider implementation
    ```
 4. Create one or more `Layer` objects, writing a `vec4 process(vec4 color)` GLSL function for each
    ```kotlin

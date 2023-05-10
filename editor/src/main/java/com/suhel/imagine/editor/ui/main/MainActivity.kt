@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupImagine() {
         imagineEngine = ImagineEngine(binding.imagine)
-        binding.imagine.engine = imagineEngine
 
         imagineEngine.layers = layers
         imagineEngine.onBitmap = { bitmap ->
