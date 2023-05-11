@@ -1,6 +1,5 @@
 package com.suhel.imagine.editor.ui.main
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.PickVisualMediaRequest
@@ -50,6 +49,7 @@ class MainActivity : AppCompatActivity() {
                     this,
                     bitmap,
                     saveFormat,
+                    { showSnackbar("Saving") },
                     { showSnackbar("Save successful") },
                     { showSnackbar(it.message.toString()) }
                 )
@@ -83,16 +83,10 @@ class MainActivity : AppCompatActivity() {
             imagineEngine.updatePreview()
         }
         adapter.onDelete = { idx ->
-            AlertDialog.Builder(this)
-                .setMessage("Delete this layer?")
-                .setPositiveButton("Yes") { _, _ ->
-                    layers.removeAt(idx)
-                    adapter.notifyItemRemoved(idx)
-                    updatePlaceholderVisibility()
-                    imagineEngine.updatePreview()
-                }
-                .setNegativeButton("No") { _, _ -> }
-                .show()
+            layers.removeAt(idx)
+            adapter.notifyItemRemoved(idx)
+            updatePlaceholderVisibility()
+            imagineEngine.updatePreview()
         }
         adapter.onVisibilityToggle = { idx ->
             layers[idx].layerVisible = layers[idx].layerVisible.not()
@@ -128,7 +122,6 @@ class MainActivity : AppCompatActivity() {
             val dialog = BitmapSaveFormatDialog()
             dialog.onChoose = {
                 saveFormat = it
-                showSnackbar("Saving")
                 imagineEngine.exportBitmap()
             }
             dialog.show(supportFragmentManager, "BitmapSaveFormatDialog")

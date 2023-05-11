@@ -5,8 +5,8 @@ import com.suhel.imagine.editor.model.layers.EffectLayer
 class ContrastLayer : EffectLayer(
     "Contrast",
     """
-        vec3 process(vec3 color) {
-            return vec3(color.r * color.r, color.g * color.g, color.b * color.b);
+        vec4 process(vec4 color) {
+            return vec4(color.rgb * color.rgb, color.a);
         }
     """.trimIndent()
 )

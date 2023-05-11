@@ -21,7 +21,7 @@ layout (location = 4) uniform int uBlendMode;
 layout (location = 0) out vec4 fragColor;
 
 // Declare the abstract function that needs to be implemented
-vec3 process(vec3 color);
+vec4 process(vec4 color);
 
 // This will be resolved in another fragment shader
 vec3 blend(int mode, vec3 dst, vec3 src);
@@ -29,19 +29,19 @@ vec3 blend(int mode, vec3 dst, vec3 src);
 // Entry point invoked for every fragment
 void main() {
     // Sample the original pixel color from the image texture
-    vec3 baseColor = texture(uImage, vTexCoords).rgb;
+    vec4 baseColor = texture(uImage, vTexCoords);
 
     // Pass it down to the abstract processor
-    vec3 processedColor = process(baseColor);
+    vec4 processedColor = process(baseColor);
 
     // Apply a src mode filter
-    vec3 blendedColor = blend(uBlendMode, baseColor, processedColor);
+    vec3 blendedColor = blend(uBlendMode, baseColor.rgb, processedColor.rgb);
 
     // Color adjusted by interpolating between baseColor and blendedColor
-    vec3 interpolatedColor = mix(baseColor, blendedColor, uIntensity);
+    vec3 interpolatedColor = mix(baseColor.rgb, blendedColor, uIntensity);
 
     // src the original and processed color
-    fragColor = vec4(interpolatedColor, 1.0);
+    fragColor = vec4(interpolatedColor, processedColor.a);
 }
 
 vec3 blendNormal(vec3 dst, vec3 src) {

@@ -17,6 +17,7 @@ class BitmapSaveTask(
     private val context: Context,
     private val bitmap: Bitmap,
     private val format: BitmapSaveFormat,
+    private val onStart: () -> Unit,
     private val onSuccess: () -> Unit,
     private val onError: (BitmapSaveException) -> Unit,
 ) : Runnable {
@@ -42,6 +43,8 @@ class BitmapSaveTask(
             return
         }
 
+        postStart()
+
         val outputStream = contentResolver.openOutputStream(uri)
 
         if (outputStream == null) {
@@ -59,6 +62,10 @@ class BitmapSaveTask(
         }
 
         postSuccess()
+    }
+
+    private fun postStart() {
+        mainThread.post(onStart)
     }
 
     private fun postSuccess() {

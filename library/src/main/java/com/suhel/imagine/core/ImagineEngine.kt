@@ -108,14 +108,11 @@ class ImagineEngine(imagineView: ImagineView) {
             // Set the canvas clear color beforehand
             updateSurfaceColor()
 
-            val shaderFactory = imagineView?.context?.let { ImagineLayerShaderFactory.create(it) }
-                ?: throw IllegalStateException("Shader stage failed")
-
             // Initialize the engine state to ready, with the essential
             // resources pre-allocated for later use
             state = state.copy(
                 isReady = true,
-                shaderFactory = shaderFactory,
+                shaderFactory = imagineView?.context?.let { ImagineLayerShaderFactory.create(it) },
                 quad = ImagineQuad.create(),
             )
         }
@@ -152,8 +149,10 @@ class ImagineEngine(imagineView: ImagineView) {
      * generate a bitmap and call [onBitmap] lambda on the UI thread
      */
     fun exportBitmap() {
-        state = state.copy(isPendingExport = true)
-        imagineView?.requestRender()
+        if (!state.layers.isNullOrEmpty() && state.onBitmap != null) {
+            state = state.copy(isPendingExport = true)
+            imagineView?.requestRender()
+        }
     }
 
     /**
@@ -342,7 +341,7 @@ class ImagineEngine(imagineView: ImagineView) {
                 ) return RenderContext.Blank
 
                 // Export mode
-                if (isPendingExport && layers != null && onBitmap != null)
+                if (isPendingExport && !layers.isNullOrEmpty() && onBitmap != null)
                     return RenderContext.Export(
                         quad,
                         image,
@@ -467,7 +466,7 @@ class ImagineEngine(imagineView: ImagineView) {
                         image,
                         aspectRatioMatrix,
                         ImagineMatrix.invertY,
-                        intensity = .0f,
+                        intensity = 1.0f,
                         ImagineBlendMode.Normal,
                     )
                 } else {

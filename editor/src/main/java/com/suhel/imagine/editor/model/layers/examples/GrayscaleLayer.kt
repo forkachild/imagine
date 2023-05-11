@@ -5,9 +5,9 @@ import com.suhel.imagine.editor.model.layers.EffectLayer
 class GrayscaleLayer : EffectLayer(
     "Grayscale",
     """
-        vec3 process(vec3 color) {
-            float avg = (0.2126 * color.r) + (0.7152 * color.g) + (0.0722 * color.b);
-            return vec3(avg);
+        vec4 process(vec4 color) {
+            vec3 avg = vec3(dot(vec3(0.2126, 0.7152, 0.0722), color.rgb));
+            return vec4(avg, color.a);
         }
     """.trimIndent()
 )
