@@ -5,8 +5,8 @@ import com.suhel.imagine.editor.model.layers.EffectLayer
 class ColorCycleLayer : EffectLayer(
     "Color Cycle",
     """
-        vec4 process(vec4 color) {
-            return vec4(color.g, color.b, color.r, 1.0);
+        vec3 process(vec3 color) {
+            return color.gbr;
         }
     """.trimIndent()
 )

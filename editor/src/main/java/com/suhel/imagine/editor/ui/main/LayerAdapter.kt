@@ -3,12 +3,18 @@ package com.suhel.imagine.editor.ui.main
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemSelectedListener
+import android.widget.ArrayAdapter
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.google.android.material.slider.Slider.OnChangeListener
+import com.suhel.imagine.core.types.ImagineBlendMode
 import com.suhel.imagine.editor.R
 import com.suhel.imagine.editor.databinding.ItemLayerBinding
+import com.suhel.imagine.editor.extensions.displayText
 import com.suhel.imagine.editor.model.layers.EffectLayer
 
 class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
@@ -21,7 +27,10 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
         }
 
     var onStartDrag: ((ViewHolder) -> Unit)? = null
+    var onDelete: ((Int) -> Unit)? = null
+    var onVisibilityToggle: ((Int) -> Unit)? = null
     var onLayerUpdated: ((Int, Float) -> Unit)? = null
+    var onBlendModeUpdated: ((Int, Int) -> Unit)? = null
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -58,11 +67,43 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
 
                 false
             }
+            binding.btnDelete.setOnClickListener {
+                onDelete?.invoke(adapterPosition)
+            }
+            binding.btnVisibility.setOnClickListener {
+                onVisibilityToggle?.invoke(adapterPosition)
+            }
+            binding.spnBlendMode.adapter = ArrayAdapter(
+                parent.context,
+                R.layout.item_blend_mode,
+                R.id.tvName,
+                ImagineBlendMode.all.map { it.displayText }
+            )
+            binding.spnBlendMode.onItemSelectedListener = object : OnItemSelectedListener {
+
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    onBlendModeUpdated?.invoke(adapterPosition, position)
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+
+                }
+
+            }
         }
 
         fun bind(value: EffectLayer) {
             binding.tvName.text = value.name
-            binding.sldIntensity.value = value.factor
+            binding.sldIntensity.value = value.layerIntensity
+            binding.spnBlendMode.setSelection(value.layerBlendModeIdx)
+            binding.btnVisibility.setImageResource(
+                if (value.layerVisible) R.drawable.ic_visible else R.drawable.ic_invisible
+            )
         }
 
     }

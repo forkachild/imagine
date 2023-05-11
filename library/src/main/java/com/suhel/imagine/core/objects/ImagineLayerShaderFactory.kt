@@ -1,7 +1,11 @@
 package com.suhel.imagine.core.objects
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
+import com.suhel.imagine.R
+import com.suhel.imagine.core.objects.ImagineLayerShaderFactory.Companion.create
 import com.suhel.imagine.core.types.ImagineLayer
+import com.suhel.imagine.util.readRawRes
 import kotlin.reflect.KClass
 
 /**
@@ -16,6 +20,7 @@ import kotlin.reflect.KClass
 internal class ImagineLayerShaderFactory @VisibleForTesting constructor(
     val bypassShader: ImagineLayerShader,
     private val vsQuad: ImagineShader.Compiled,
+    private val fsLayerBaseSrc: String,
 ) {
 
     /**
@@ -40,9 +45,20 @@ internal class ImagineLayerShaderFactory @VisibleForTesting constructor(
      */
     fun getLayerShader(layer: ImagineLayer): ImagineLayerShader? = releaseSafe {
         layerShaderMap[layer::class] ?: run {
-            val source = "$FS_LAYER_SOURCE_BASE\n\n${layer.source}"
-            val program = ImagineShader.compile(source, ImagineShader.Type.Fragment)
-                ?.linkWith(vsQuad, true) ?: return@run null
+            // Optimization to prevent resize
+            val fsLayerSrc = StringBuilder(
+                fsLayerBaseSrc.length + layer.source.length + 2
+            ).apply {
+                append(fsLayerBaseSrc)
+                append("\n\n")
+                append(layer.source)
+            }.toString()
+
+            val fsLayer = ImagineShader.compile(fsLayerSrc, ImagineShader.Type.Fragment)
+                ?: return@run null
+
+            val program = fsLayer.linkWith(vsQuad, true)
+                ?: return@run null
 
             ImagineLayerShader(program).also {
                 layerShaderMap[layer::class] = it
@@ -74,119 +90,32 @@ internal class ImagineLayerShaderFactory @VisibleForTesting constructor(
     companion object {
 
         /**
-         * The static source code of Vertex Shader used in Quad rendering
-         */
-        private val VS_QUAD_SOURCE = """
-            #version 300 es
-            
-            // Binding point for the vertex position attribute
-            layout (location = 0) in vec2 aPosition;
-            
-            // Binding point for the texture coordinates attribute
-            layout (location = 1) in vec2 aTexCoords;
-            
-            // Binding point for the aspect ratio matrix uniform
-            layout (location = 0) uniform mat4 uAspectRatio;
-            
-            // Binding point for the invert matrix uniform
-            layout (location = 1) uniform mat4 uInvert;
-            
-            // Binding point for interpolated texture coordinates
-            // output to the fragment shader
-            layout (location = 0) out vec2 vTexCoords;
-            
-            // Entry point invoked for every vertex
-            void main() {
-                // Transform the vertex coordinates by inverting them first
-                // and then applying aspect ratio correction
-                gl_Position = uAspectRatio * uInvert * vec4(aPosition, 0.0, 1.0);
-                
-                // Pass through the texture coordinates by interpolating them
-                vTexCoords = aTexCoords;
-            }
-        """.trimIndent()
-
-        /**
-         * The static base source code of the Fragment Shader for rendering layers.
-         * It is incomplete unless `vec4 process(vec4 color)` is defined
-         */
-        private val FS_LAYER_SOURCE_BASE = """
-            #version 300 es
-            
-            // Precision is limited to "medium". Other values are
-            // "highp" and "lowp" where the "p" stands for precision
-            precision mediump float;
-            
-            // Binding point for the texture coordinates interpolated from
-            // the vertex shader
-            layout (location = 0) in vec2 vTexCoords;
-            
-            // Binding point for the image texture uniform
-            layout (location = 2) uniform sampler2D uImage;
-            
-            // Binding point for the intensity float uniform
-            layout (location = 3) uniform float uIntensity;
-            
-            // Binding point for the color output for the current fragment
-            layout (location = 0) out vec4 fragColor;
-            
-            // Declare the abstract function that needs to be implemented
-            // by the 
-            vec4 process(vec4 color);
-            
-            // Entry point invoked for every fragment
-            void main() {
-                // Sample the original pixel color from the image texture
-                vec4 originalColor = texture(uImage, vTexCoords);
-                
-                // Pass it down to the abstract processor
-                vec4 processedColor = process(originalColor);
-                
-                // Blend the original and processed color
-                fragColor = (uIntensity * processedColor) + ((1.0 - uIntensity) * originalColor);
-            }
-        """.trimIndent()
-
-        /**
-         * The static source code for the Fragment Shader used to return
-         * unprocessed pixel values from a texture
-         */
-        private val FS_COPY_SOURCE = """
-            #version 300 es
-            
-            // Precision is limited to "mediump". Other values are
-            // "highp" and "lowp" where the "p" stands for precision
-            precision mediump float;
-            
-            // Binding point for the texture coordinates interpolated from
-            // the vertex shader
-            layout (location = 0) in vec2 vTexCoords;
-            
-            // Binding point for the image texture uniform
-            layout (location = 2) uniform sampler2D uImage;
-            
-            // Binding point for the color output for the current fragment
-            layout (location = 0) out vec4 fragColor;
-            
-            // Entry point invoked for every fragment
-            void main() {
-                // Pass through the sampled pixel color
-                fragColor = texture(uImage, vTexCoords);
-            }
-        """.trimIndent()
-
-        /**
          * Safely allocates the required resources to create an instance of
          * [ImagineLayerShaderFactory]
          *
          * @return An instance of [ImagineLayerShaderFactory] or null if error occurred
          */
-        fun create(): ImagineLayerShaderFactory? {
-            val vsQuad = ImagineShader.compile(VS_QUAD_SOURCE, ImagineShader.Type.Vertex) ?: return null
-            val copyShader = ImagineShader.compile(FS_COPY_SOURCE, ImagineShader.Type.Fragment)
-                ?.linkWith(vsQuad, true) ?: return null
+        fun create(context: Context): ImagineLayerShaderFactory? {
+            val vsQuadSrc = context.readRawRes(R.raw.quad)
+            val fsLayerCopySrc = context.readRawRes(R.raw.layer_copy)
+            val fsLayerBaseSrc = context.readRawRes(R.raw.layer_base)
 
-            return ImagineLayerShaderFactory(ImagineLayerShader(copyShader), vsQuad)
+            val vsQuad = ImagineShader.compile(vsQuadSrc, ImagineShader.Type.Vertex)
+                ?: return null
+            val fsLayerCopy = ImagineShader.compile(fsLayerCopySrc, ImagineShader.Type.Fragment)
+                ?: return null
+
+            val layerCopyShader = fsLayerCopy.linkWith(vsQuad, releaseOnFailure = true)
+                ?: run {
+                    vsQuad.release()
+                    return null
+                }
+
+            return ImagineLayerShaderFactory(
+                ImagineLayerShader(layerCopyShader),
+                vsQuad,
+                fsLayerBaseSrc,
+            )
         }
 
     }

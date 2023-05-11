@@ -29,10 +29,38 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/lstLayers"
+        app:layout_constraintBottom_toTopOf="@+id/btnAddLayer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnPick" />
+
+    <TextView
+        android:id="@+id/lblLayers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:alpha="0.3"
+        android:text="Layers"
+        android:textAllCaps="true"
+        android:textColor="?attr/colorOnSurface"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/btnAddLayer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnAddLayer" />
+
+    <ImageButton
+        android:id="@+id/btnAddLayer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:alpha="0.3"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="12dp"
+        android:src="@drawable/ic_add"
+        app:layout_constraintBottom_toTopOf="@+id/lstLayers"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imagine"
+        app:tint="?attr/colorOnSurface" />
 
     <TextView
         android:id="@+id/lblLayersPlaceholder"
@@ -40,7 +68,7 @@
         android:layout_height="0dp"
         android:alpha="0.3"
         android:gravity="center"
-        android:text="No layers added\nTap + to add"
+        android:text="No layers"
         android:textColor="?attr/colorOnBackground"
         android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="@+id/lstLayers"
@@ -52,22 +80,10 @@
         android:id="@+id/lstLayers"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imagine"
+        app:layout_constraintTop_toBottomOf="@+id/btnAddLayer"
         tools:listitem="@layout/item_layer" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnAddLayer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:src="@drawable/ic_add"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

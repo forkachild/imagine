@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
  *
  * @param obj The object to wrap in a [WeakReference]
  */
-internal fun <T> weakRefOf(obj: T) = WeakReferenceDelegate(obj)
+internal fun <T> weakRefTo(obj: T) = WeakReferenceDelegate(obj)
 
 /**
  * Delegated read-only nullable property wrapper that wraps an object inside a [WeakReference]

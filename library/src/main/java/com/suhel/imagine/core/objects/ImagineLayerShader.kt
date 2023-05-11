@@ -1,5 +1,6 @@
 package com.suhel.imagine.core.objects
 
+import com.suhel.imagine.core.types.ImagineBlendMode
 import com.suhel.imagine.core.types.ImagineMatrix
 
 /**
@@ -61,12 +62,22 @@ internal class ImagineLayerShader(
 
     /**
      * Bind the intensity value to the shader program to control
-     * the blending between the original and the processed layer
+     * the interpolation between the original and the processed layer
      *
      * @param value A Float value between 0.0f and 1.0f
      */
     fun bindIntensity(value: Float) {
         intensity.bindFloat(value)
+    }
+
+    /**
+     * Bind the blendMode value to the shader program to control
+     * the blending between the original and the processed layer
+     *
+     * @param value A Float value between 0.0f and 1.0f
+     */
+    fun bindBlendMode(value: ImagineBlendMode) {
+        blendMode.bindInt(value.ordinal)
     }
 
     companion object {
@@ -100,5 +111,10 @@ internal class ImagineLayerShader(
          * Intensity value uniform
          */
         val intensity = ImagineShaderBinding.Uniform(3)
+
+        /**
+         * Blend mode raw value uniform
+         */
+        val blendMode = ImagineShaderBinding.Uniform(4)
     }
 }
