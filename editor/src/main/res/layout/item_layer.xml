@@ -5,110 +5,85 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="2dp"
-    android:background="?attr/colorSurfaceContainerHigh">
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="?attr/colorSurfaceContainerHighest"
-        android:elevation="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/btnDrag" />
-
-    <ImageView
-        android:id="@+id/btnDrag"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.5"
-        android:padding="12dp"
-        android:src="@drawable/ic_drag_handle"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sldIntensity"
-        app:tint="?attr/colorOnSurface" />
-
-    <ImageButton
-        android:id="@+id/btnDelete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.5"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:elevation="1dp"
-        android:padding="12dp"
-        android:src="@drawable/ic_close"
-        app:layout_constraintBottom_toBottomOf="@+id/btnDrag"
-        app:layout_constraintEnd_toStartOf="@+id/btnDrag"
-        app:layout_constraintTop_toTopOf="@+id/btnDrag"
-        app:tint="?attr/colorOnSurface" />
-
-    <ImageButton
-        android:id="@+id/btnVisibility"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.5"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:elevation="1dp"
-        android:padding="12dp"
-        android:src="@drawable/ic_visible"
-        app:layout_constraintBottom_toBottomOf="@+id/btnDelete"
-        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
-        app:layout_constraintTop_toTopOf="@+id/btnDelete"
-        app:tint="?attr/colorOnSurface" />
+    android:background="?attr/colorSurfaceContainer"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/tvName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginTop="16dp"
-        android:alpha="0.7"
+        android:alpha="0.5"
         android:includeFontPadding="false"
         android:textAllCaps="true"
         android:textColor="?attr/colorOnSurface"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="CONTRAST" />
+        tools:text="Contrast" />
 
     <com.google.android.material.slider.Slider
         android:id="@+id/sldIntensity"
+        style="@style/Widget.Material3.Slider"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="4dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="12dp"
         android:valueFrom="0.0"
         android:valueTo="1.0"
         app:labelBehavior="gone"
-        app:layout_constraintEnd_toEndOf="@+id/tvName"
-        app:layout_constraintStart_toStartOf="@+id/tvName"
-        app:layout_constraintTop_toBottomOf="@+id/tvName"
-        app:trackColorInactive="@null" />
+        app:layout_constraintEnd_toStartOf="@+id/btnVisibility"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvName" />
 
-    <TextView
-        android:id="@+id/lblBlendMode"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnVisibility"
+        style="@style/Widget.Material3.Button.IconButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:alpha="0.7"
-        android:gravity="end"
-        android:includeFontPadding="false"
-        android:text="Blend mode"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@+id/spnBlendMode"
-        app:layout_constraintStart_toStartOf="@+id/tvName"
-        app:layout_constraintTop_toTopOf="@+id/spnBlendMode" />
+        app:icon="@drawable/ic_visible"
+        app:layout_constraintBottom_toBottomOf="@+id/sldIntensity"
+        app:layout_constraintEnd_toStartOf="@+id/btnDelete"
+        app:layout_constraintTop_toTopOf="@+id/sldIntensity" />
 
-    <Spinner
-        android:id="@+id/spnBlendMode"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDelete"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:icon="@drawable/ic_delete"
+        app:layout_constraintBottom_toBottomOf="@+id/btnVisibility"
+        app:layout_constraintEnd_toStartOf="@+id/btnDrag"
+        app:layout_constraintTop_toTopOf="@+id/btnVisibility" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDrag"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        app:icon="@drawable/ic_reorder"
+        app:layout_constraintBottom_toBottomOf="@+id/btnVisibility"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnDelete" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnChooseBlendMode"
+        style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@+id/btnVisibility"
-        app:layout_constraintEnd_toStartOf="@+id/btnVisibility"
-        app:layout_constraintStart_toEndOf="@+id/lblBlendMode"
-        app:layout_constraintTop_toTopOf="@+id/btnVisibility"
-        tools:listitem="@layout/item_blend_mode" />
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sldIntensity"
+        tools:listitem="@layout/item_blend_mode"
+        tools:text="Normal" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,9 @@
 package com.suhel.imagine.core.types
 
+/**
+ * Represents the algorithm which will be used to blend
+ * the processed layer with the previous layer
+ */
 enum class ImagineBlendMode {
     // Normal
     Normal,
@@ -39,12 +43,5 @@ enum class ImagineBlendMode {
     Hue,
     Saturation,
     Color,
-    Luminosity;
-
-    companion object {
-
-        val all = values()
-
-    }
-
+    Luminosity,
 }

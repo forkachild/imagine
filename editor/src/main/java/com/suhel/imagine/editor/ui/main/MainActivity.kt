@@ -71,14 +71,15 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        adapter = LayerAdapter()
+        adapter = LayerAdapter(supportFragmentManager)
         adapter.data = layers
-        adapter.onLayerUpdated = { idx, intensity ->
+        adapter.onIntensityUpdated = { idx, intensity ->
             layers[idx].layerIntensity = intensity
             imagineEngine.updatePreview()
         }
-        adapter.onBlendModeUpdated = { idx, blendModeIdx ->
-            layers[idx].layerBlendModeIdx = blendModeIdx
+        adapter.onBlendModeUpdated = { idx, namedBlendMode ->
+            layers[idx].layerBlendMode = namedBlendMode
+            adapter.notifyItemChanged(idx)
             imagineEngine.updatePreview()
         }
         adapter.onDelete = { idx ->

@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingHorizontal="8dp"
-    android:paddingVertical="16dp">
+    android:layout_height="wrap_content"
+    android:background="@drawable/rect_ripple"
+    android:paddingVertical="16dp"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp">
 
     <TextView
-        android:id="@+id/tvName"
+        android:id="@+id/tvBlendModeName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:includeFontPadding="false"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="20sp"
+        tools:text="Normal" />
 
 </FrameLayout>

@@ -139,7 +139,9 @@ vec3 blendLinearLight(vec3 dst, vec3 src) {
 }
 
 float blendPinLight(float dst, float src) {
-    return (2.0 * src - 1.0 > dst) ? 2.0 * src - 1.0 : (src < 0.5 * dst) ? 2.0 * src : dst;
+    return 2.0 * src - 1.0 > dst
+    ? 2.0 * src - 1.0
+    : src < 0.5 * dst ? 2.0 * src : dst;
 }
 
 vec3 blendPinLight(vec3 dst, vec3 src) {
@@ -205,8 +207,8 @@ vec3 hsv2rgb(vec3 hsv)
         float var_1 = hsv.z * (1.0 - hsv.y);
         float var_2 = hsv.z * (1.0 - hsv.y * (var_h - var_i));
         float var_3 = hsv.z * (1.0 - hsv.y * (1.0 - (var_h - var_i)));
+        int det = int(var_i);
 
-        int det = int(var_h);
         if (det == 0) rgb = vec3(hsv.z, var_3, var_1);
         else if (det == 1) rgb = vec3(var_2, hsv.z, var_1);
         else if (det == 2) rgb = vec3(var_1, hsv.z, var_3);

@@ -9,7 +9,7 @@ enum class BitmapSaveFormat {
     val mimeType: String
         get() = when (this) {
             PNG -> "image/png"
-            JPEG -> "image/jpg"
+            JPEG -> "image/jpeg"
         }
 
     val compressFormat: Bitmap.CompressFormat
