@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="32dp"
-        android:text="Save as"
+        android:text="Choose format"
         android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="28sp"
         app:layout_constraintEnd_toEndOf="parent"

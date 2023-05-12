@@ -1,13 +1,10 @@
 package com.suhel.imagine.core
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.os.Handler
 import android.os.Looper
-import com.google.android.material.R
-import com.google.android.material.color.MaterialColors
 import com.suhel.imagine.BuildConfig
 import com.suhel.imagine.core.ImagineEngine.RenderContext.Blank
 import com.suhel.imagine.core.ImagineEngine.RenderContext.Export
@@ -106,7 +103,7 @@ class ImagineEngine(imagineView: ImagineView) {
 
         override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
             // Set the canvas clear color beforehand
-            updateSurfaceColor()
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
             // Initialize the engine state to ready, with the essential
             // resources pre-allocated for later use
@@ -166,11 +163,7 @@ class ImagineEngine(imagineView: ImagineView) {
     /**
      * Update the clear color of OpenGL context
      */
-    private fun updateSurfaceColor() {
-        val color = imagineView?.let {
-            MaterialColors.getColor(it, R.attr.colorSurface, Color.BLACK)
-        } ?: Color.BLACK
-
+    private fun updateSurfaceColor(color: Int) {
         val red = (color shr 16) and 0xFF
         val green = (color shr 8) and 0xFF
         val blue = color and 0xFF
