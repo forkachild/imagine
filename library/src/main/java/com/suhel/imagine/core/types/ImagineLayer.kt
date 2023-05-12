@@ -18,6 +18,11 @@ interface ImagineLayer {
     val intensity: Float
 
     /**
+     * Type of blending to apply between this Layer and the previous Layer
+     */
+    val blendMode: ImagineBlendMode
+
+    /**
      * Called during shader creation to bind any uniform
      */
     fun create(program: ImagineShader.Program) {}

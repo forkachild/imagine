@@ -1,36 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/colorSurface"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/lblTitle"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
-        android:padding="16dp"
-        android:text="Add layer"
-        android:textAllCaps="true"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginVertical="32dp"
+        android:includeFontPadding="false"
+        android:text="Choose layer"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textSize="28sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lstLayers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/lblTitle"
+        android:clipToPadding="false"
+        android:paddingBottom="32dp"
         tools:listitem="@layout/item_add_layer" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

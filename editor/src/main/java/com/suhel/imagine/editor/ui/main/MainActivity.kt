@@ -7,17 +7,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import com.suhel.imagine.core.ImagineEngine
 import com.suhel.imagine.editor.databinding.ActivityMainBinding
 import com.suhel.imagine.editor.helper.BitmapSaveTask
-import com.suhel.imagine.editor.helper.DragSwipeCallback
+import com.suhel.imagine.editor.helper.ReorderItemsCallback
+import com.suhel.imagine.editor.model.BitmapSaveFormat
 import com.suhel.imagine.editor.model.UriImageProvider
 import com.suhel.imagine.editor.model.layers.EffectLayer
-import com.suhel.imagine.editor.model.BitmapSaveFormat
 import com.suhel.imagine.editor.ui.addlayer.AddLayerDialog
 import com.suhel.imagine.editor.ui.saveformat.BitmapSaveFormatDialog
-import java.util.*
+import java.util.Collections
 
 class MainActivity : AppCompatActivity() {
 
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity() {
                     this,
                     bitmap,
                     saveFormat,
+                    { showSnackbar("Saving") },
                     { showSnackbar("Save successful") },
                     { showSnackbar(it.message.toString()) }
                 )
@@ -57,38 +59,43 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupLayerList() {
         val itemTouchHelper = ItemTouchHelper(
-            DragSwipeCallback(
-                this,
-                onItemMove = { from, to ->
-                    if (from < to) {
-                        (from until to)
-                            .forEach { Collections.swap(layers, it, it + 1) }
-                    } else {
-                        (from downTo (to + 1))
-                            .forEach { Collections.swap(layers, it, it - 1) }
-                    }
+            ReorderItemsCallback { from, to ->
+                if (from < to)
+                    (from until to).forEach { Collections.swap(layers, it, it + 1) }
+                else
+                    (from downTo (to + 1)).forEach { Collections.swap(layers, it, it - 1) }
 
-                    adapter.notifyItemMoved(from, to)
-                    imagineEngine.updatePreview()
-                    true
-                },
-                onItemSwipe = { idx ->
-                    layers.removeAt(idx)
-                    updatePlaceholderVisibility()
-                    adapter.notifyItemRemoved(idx)
-                    imagineEngine.updatePreview()
-                }
-            )
+                adapter.notifyItemMoved(from, to)
+                imagineEngine.updatePreview()
+                true
+            }
         )
 
-        adapter = LayerAdapter()
+        adapter = LayerAdapter(supportFragmentManager)
         adapter.data = layers
-        adapter.onLayerUpdated = { index, intensity ->
-            layers[index].factor = intensity
+        adapter.onIntensityUpdated = { idx, intensity ->
+            layers[idx].layerIntensity = intensity
+            imagineEngine.updatePreview()
+        }
+        adapter.onBlendModeUpdated = { idx, namedBlendMode ->
+            layers[idx].layerBlendMode = namedBlendMode
+            adapter.notifyItemChanged(idx)
+            imagineEngine.updatePreview()
+        }
+        adapter.onDelete = { idx ->
+            layers.removeAt(idx)
+            adapter.notifyItemRemoved(idx)
+            updatePlaceholderVisibility()
+            imagineEngine.updatePreview()
+        }
+        adapter.onVisibilityToggle = { idx ->
+            layers[idx].layerVisible = layers[idx].layerVisible.not()
+            adapter.notifyItemChanged(idx)
             imagineEngine.updatePreview()
         }
         binding.lstLayers.layoutManager = LinearLayoutManager(this)
         binding.lstLayers.adapter = adapter
+        (binding.lstLayers.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         itemTouchHelper.attachToRecyclerView(binding.lstLayers)
         adapter.onStartDrag = {
             itemTouchHelper.startDrag(it)
@@ -115,7 +122,6 @@ class MainActivity : AppCompatActivity() {
             val dialog = BitmapSaveFormatDialog()
             dialog.onChoose = {
                 saveFormat = it
-                showSnackbar("Saving")
                 imagineEngine.exportBitmap()
             }
             dialog.show(supportFragmentManager, "BitmapSaveFormatDialog")

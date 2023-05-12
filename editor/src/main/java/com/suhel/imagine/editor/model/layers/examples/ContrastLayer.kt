@@ -6,7 +6,7 @@ class ContrastLayer : EffectLayer(
     "Contrast",
     """
         vec4 process(vec4 color) {
-            return vec4(color.r * color.r, color.g * color.g, color.b * color.b, 1.0);
+            return vec4(color.rgb * color.rgb, color.a);
         }
     """.trimIndent()
 )

@@ -42,13 +42,22 @@ internal sealed class ImagineShaderBinding(protected val location: Int) {
         }
 
         /**
+         * Binds a scalar int to this binding point
+         *
+         * @param value The [Int] value
+         */
+        fun bindInt(value: Int) {
+            GLES20.glUniform1i(location, value)
+        }
+
+        /**
          * Binds a texture to this sampler binding point
          *
          * @param texture The [ImagineTexture] to bind
          * @param index The texture index to use for binding. Default 0
          */
         fun bindTexture(texture: ImagineTexture, index: Int = 0) {
-            GLES20.glUniform1i(location, index)
+            bindInt(index)
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + index)
             texture.bind()
         }

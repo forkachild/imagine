@@ -4,14 +4,19 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.google.android.material.slider.Slider.OnChangeListener
 import com.suhel.imagine.editor.R
 import com.suhel.imagine.editor.databinding.ItemLayerBinding
+import com.suhel.imagine.editor.model.NamedBlendMode
 import com.suhel.imagine.editor.model.layers.EffectLayer
 
-class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
+class LayerAdapter(
+    // TODO: Remove this
+    private val fragmentManager: FragmentManager
+) : Adapter<LayerAdapter.LayerViewHolder>() {
 
     var data: List<EffectLayer> = emptyList()
         @SuppressLint("NotifyDataSetChanged")
@@ -21,7 +26,10 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
         }
 
     var onStartDrag: ((ViewHolder) -> Unit)? = null
-    var onLayerUpdated: ((Int, Float) -> Unit)? = null
+    var onDelete: ((Int) -> Unit)? = null
+    var onVisibilityToggle: ((Int) -> Unit)? = null
+    var onIntensityUpdated: ((Int, Float) -> Unit)? = null
+    var onBlendModeUpdated: ((Int, NamedBlendMode) -> Unit)? = null
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -47,9 +55,19 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
             binding.sldIntensity.addOnChangeListener(
                 OnChangeListener { _, value, fromUser ->
                     if (fromUser)
-                        onLayerUpdated?.invoke(adapterPosition, value)
+                        onIntensityUpdated?.invoke(adapterPosition, value)
                 }
             )
+            binding.btnChooseBlendMode.setOnClickListener {
+                val dialog = ChooseBlendModeDialog()
+                dialog.onSelected = {
+                    onBlendModeUpdated?.invoke(adapterPosition, it)
+                }
+                dialog.show(fragmentManager, "ChooseBlendModeDialog")
+            }
+            binding.btnVisibility.setOnClickListener {
+                onVisibilityToggle?.invoke(adapterPosition)
+            }
             binding.btnDrag.setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     onStartDrag?.invoke(this)
@@ -58,11 +76,18 @@ class LayerAdapter : Adapter<LayerAdapter.LayerViewHolder>() {
 
                 false
             }
+            binding.btnDelete.setOnClickListener {
+                onDelete?.invoke(adapterPosition)
+            }
         }
 
         fun bind(value: EffectLayer) {
             binding.tvName.text = value.name
-            binding.sldIntensity.value = value.factor
+            binding.sldIntensity.value = value.layerIntensity
+            binding.btnChooseBlendMode.text = value.layerBlendMode.name
+            binding.btnVisibility.setIconResource(
+                if (value.layerVisible) R.drawable.ic_visible else R.drawable.ic_invisible
+            )
         }
 
     }

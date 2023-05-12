@@ -6,7 +6,7 @@ class RedFilterLayer : EffectLayer(
     "Red Filter",
     """
         vec4 process(vec4 color) {
-            return vec4(color.r, 0.0, 0.0, 1.0);
+            return vec4(color.r, 0.0, 0.0, color.a);
         }
     """.trimIndent()
 )

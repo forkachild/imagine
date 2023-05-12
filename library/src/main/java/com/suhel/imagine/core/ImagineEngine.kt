@@ -1,14 +1,14 @@
 package com.suhel.imagine.core
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.opengl.GLSurfaceView.Renderer
 import android.os.Handler
 import android.os.Looper
-import com.google.android.material.R
-import com.google.android.material.color.MaterialColors
+import com.suhel.imagine.BuildConfig
+import com.suhel.imagine.core.ImagineEngine.RenderContext.Blank
+import com.suhel.imagine.core.ImagineEngine.RenderContext.Export
+import com.suhel.imagine.core.ImagineEngine.RenderContext.Preview
 import com.suhel.imagine.core.objects.ImagineFramebuffer
 import com.suhel.imagine.core.objects.ImagineLayerShader
 import com.suhel.imagine.core.objects.ImagineLayerShaderFactory
@@ -16,11 +16,12 @@ import com.suhel.imagine.core.objects.ImagineQuad
 import com.suhel.imagine.core.objects.ImagineTexture
 import com.suhel.imagine.core.objects.ImagineTosschain
 import com.suhel.imagine.core.objects.ImagineViewport
+import com.suhel.imagine.core.types.ImagineBlendMode
 import com.suhel.imagine.core.types.ImagineDimensions
 import com.suhel.imagine.core.types.ImagineImageProvider
 import com.suhel.imagine.core.types.ImagineLayer
 import com.suhel.imagine.core.types.ImagineMatrix
-import com.suhel.imagine.util.weakRefOf
+import com.suhel.imagine.util.weakRefTo
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -78,12 +79,12 @@ class ImagineEngine(imagineView: ImagineView) {
      * Holds a weak reference to the [ImagineView] used to
      * dispatch commands
      */
-    private val imagineView by weakRefOf(imagineView)
+    private val imagineView by weakRefTo(imagineView)
 
     /**
      * Holds the current [RenderContext] to use for drawing
      */
-    private var renderContext: RenderContext = RenderContext.Blank
+    private var renderContext: RenderContext = Blank
 
     /**
      * Holds the current [State] of this engine which are updates
@@ -98,20 +99,17 @@ class ImagineEngine(imagineView: ImagineView) {
             renderContext = value.renderContext
         }
 
-    /**
-     * Holds a reference to the [GLSurfaceView.Renderer] implementation
-     */
-    private val renderer: Renderer = object : Renderer {
+    internal inner class Renderer : GLSurfaceView.Renderer {
 
         override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
             // Set the canvas clear color beforehand
-            updateSurfaceColor()
+            GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
             // Initialize the engine state to ready, with the essential
             // resources pre-allocated for later use
             state = state.copy(
                 isReady = true,
-                shaderFactory = ImagineLayerShaderFactory.create(),
+                shaderFactory = imagineView?.context?.let { ImagineLayerShaderFactory.create(it) },
                 quad = ImagineQuad.create(),
             )
         }
@@ -132,13 +130,15 @@ class ImagineEngine(imagineView: ImagineView) {
             // Finally draw the layers
             draw()
         }
-
     }
 
     init {
         // Set the renderer and render mode whenever this is instantiated
-        imagineView.setRenderer(renderer)
+        imagineView.setRenderer(Renderer())
         imagineView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        if (BuildConfig.DEBUG)
+            imagineView.debugFlags =
+                GLSurfaceView.DEBUG_LOG_GL_CALLS or GLSurfaceView.DEBUG_CHECK_GL_ERROR
     }
 
     /**
@@ -146,8 +146,10 @@ class ImagineEngine(imagineView: ImagineView) {
      * generate a bitmap and call [onBitmap] lambda on the UI thread
      */
     fun exportBitmap() {
-        state = state.copy(isPendingExport = true)
-        imagineView?.requestRender()
+        if (!state.layers.isNullOrEmpty() && state.onBitmap != null) {
+            state = state.copy(isPendingExport = true)
+            imagineView?.requestRender()
+        }
     }
 
     /**
@@ -161,11 +163,7 @@ class ImagineEngine(imagineView: ImagineView) {
     /**
      * Update the clear color of OpenGL context
      */
-    private fun updateSurfaceColor() {
-        val color = imagineView?.let {
-            MaterialColors.getColor(it, R.attr.colorSurface, Color.BLACK)
-        } ?: Color.BLACK
-
+    private fun updateSurfaceColor(color: Int) {
         val red = (color shr 16) and 0xFF
         val green = (color shr 8) and 0xFF
         val blue = color and 0xFF
@@ -336,7 +334,7 @@ class ImagineEngine(imagineView: ImagineView) {
                 ) return RenderContext.Blank
 
                 // Export mode
-                if (isPendingExport && layers != null && onBitmap != null)
+                if (isPendingExport && !layers.isNullOrEmpty() && onBitmap != null)
                     return RenderContext.Export(
                         quad,
                         image,
@@ -394,12 +392,14 @@ class ImagineEngine(imagineView: ImagineView) {
             aspectRatioMatrix: ImagineMatrix,
             invertMatrix: ImagineMatrix,
             intensity: Float = 1.0f,
+            blendMode: ImagineBlendMode,
         ) {
             shader.bind()
             shader.bindAspectRatioMatrix(aspectRatioMatrix)
             shader.bindInvertMatrix(invertMatrix)
             shader.bindImage(texture)
             shader.bindIntensity(intensity)
+            shader.bindBlendMode(blendMode)
 
             framebuffer.bind()
             GLES20.glViewport(0, 0, dimensions.width, dimensions.height)
@@ -459,6 +459,8 @@ class ImagineEngine(imagineView: ImagineView) {
                         image,
                         aspectRatioMatrix,
                         ImagineMatrix.invertY,
+                        intensity = 1.0f,
+                        ImagineBlendMode.Normal,
                     )
                 } else {
                     // Apply each layer iteratively
@@ -490,6 +492,7 @@ class ImagineEngine(imagineView: ImagineView) {
                             if (isFrontBuffer) aspectRatioMatrix else ImagineMatrix.identity,
                             if (isInverted) ImagineMatrix.invertY else ImagineMatrix.identity,
                             layer.intensity,
+                            layer.blendMode,
                         )
 
                         // Swap framebuffers
@@ -527,9 +530,6 @@ class ImagineEngine(imagineView: ImagineView) {
                 // Create a temporary full-sized tosschain for this task
                 val tosschain = ImagineTosschain.create(image.dimensions)
 
-                // Update the dimensions of the viewport before drawing
-                GLES20.glViewport(0, 0, image.dimensions.width, image.dimensions.height)
-
                 layers.forEachIndexed { index, layer ->
                     // Obtain the shader, otherwise stop applying layers
                     val shader = shaderFactory.getLayerShader(layer) ?: return@forEachIndexed
@@ -551,6 +551,7 @@ class ImagineEngine(imagineView: ImagineView) {
                         ImagineMatrix.identity,
                         ImagineMatrix.identity,
                         layer.intensity,
+                        layer.blendMode,
                     )
 
                     // Swap framebuffers
