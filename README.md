@@ -1,14 +1,18 @@
 # Imagine
 [![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
 
-GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library with Photoshop-like blend mode support for Android using OpenGL ES 2.0
+GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library with Photoshop-like blend mode support for Android using OpenGL ES 2.0.
 
 ## Features
-- `ImagineLayer` abstraction representing each processing stage in the pipeline
-- Write only a single function in GLSL to manipulate per-pixel color
-- Process a chain of `ImagineLayer`s with a single function call
-- Provides a pre-scaled lower resolution preview mode for faster previews and only bumps up resolution during final render
-- Provides a `Bitmap` at final render to be used at your will
+- Multiple consecutive customizable layers of processing.
+- Photoshop style blending mode for each layer to merge a layer atop the previous.
+- Easy to implement abstract interface `ImagineLayer` which provides the following:
+  - **`source: String`**: Source code snippet implementing a straightforward `vec4 process(vec4 color)` GLSL function.
+  - **`intensity: Float`**: A fractional value between 0.0f to 1.0f interpolating between pixels of previous and this layer.
+  - **`blendMode: ImagineBlendMode`**: How to blend the current layer atop the previous layer.
+- 2 purposeful modes of operation
+  - **`preview`**: Scaled down image for low memory footprint and faster viewport previews, invoked by `ImagineEngine.updatePreview()`.
+  - **`export`**: Full resolution mode for extracting an edited `Bitmap`, invoked by `ImagineEngine.exportBitmap()`.
 
 ### Demo
 A beautiful _Material You_ themed simple image editor is provided in the `editor` module. You can refer to the source code of the same and maybe also use it.
