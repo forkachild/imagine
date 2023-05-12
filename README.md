@@ -1,22 +1,22 @@
 # Imagine
 [![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
 
-GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library for Android using OpenGL ES 2.0
+GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library with Photoshop-like blend mode support for Android using OpenGL ES 2.0
 
-### Blog
-I have written a blog on the entire story of this library. Check it out here [Imagine: A story of the evergreen OpenGL on Android](https://medium.com/@suhelchakraborty/imagine-a-story-of-the-evergreen-opengl-on-android-c36b4e8463f0)
+## Features
+- `ImagineLayer` abstraction representing each processing stage in the pipeline
+- Write only a single function in GLSL to manipulate per-pixel color
+- Process a chain of `ImagineLayer`s with a single function call
+- Provides a pre-scaled lower resolution preview mode for faster previews and only bumps up resolution during final render
+- Provides a `Bitmap` at final render to be used at your will
 
 ### Demo
 A beautiful _Material You_ themed simple image editor is provided in the `editor` module. You can refer to the source code of the same and maybe also use it.
 
-<img alt="Screencast" height="30%" src="assets/screencast.gif" width="30%"/>
+![Screencast](assets/screencast.gif "Imagine Editor Demo")
 
-## Features
-- `Layer` abstraction representing each processing stage in the pipeline
-- Write only a single function in GLSL to manipulate per-pixel color
-- Process a chain of `Layer`s with a single function call
-- Provides a pre-scaled lower resolution preview mode for faster previews and only bumps up resolution during final render
-- Provides a `Bitmap` at final render to be used at your will
+### Documentation
+The library code is extensively documented. Additionally, check out the story style blog [Imagine: A story of the evergreen OpenGL on Android](https://medium.com/@suhelchakraborty/imagine-a-story-of-the-evergreen-opengl-on-android-c36b4e8463f0) that details the conception of this library!
 
 ## Installation
 Add the source repository
@@ -30,7 +30,7 @@ allprojects {
     }
 }
 ```
-or in `settings.gradle` in newer gradle
+or in `settings.gradle` in newer versions of Gradle
 ```groovy
 dependencyResolutionManagement {
     ...
@@ -44,7 +44,7 @@ Add the dependency in module level `build.gradle`
 ```groovy
 dependencies {
     ...
-    implementation 'com.github.forkachild:imagine:1.0.2'
+    implementation 'com.github.forkachild:imagine:1.1.0'
 }
 ```
 
@@ -78,30 +78,38 @@ dependencies {
    imagineEngine.imageProvider = ResImageProvider(context, resId) // Or from a drawable res
    imagineEngine.imageProvider = ... // Or your custom ImageProvider implementation
    ```
-4. Create one or more `Layer` objects, writing a `vec4 process(vec4 color)` GLSL function for each
+4. Create one or more `ImagineLayer` objects, writing a `vec4 process(vec4 color)` GLSL function for each
    ```kotlin
-   class SampleLayer: Layer {
+   class InvertGreenLayer: ImagineLayer {
+       // The fragment shader source for this layer. The texture is pre-sampled
+       // and the color is passed to this function. The function signature must
+       // be accurate!
        override val source: String = """
            vec4 process(vec4 color) {
-               return vec4(color.r, 1.0, color.b, 1.0);
+               return vec4(color.r, 1.0 - color.g, color.b, color.a); // The alpha channel is important!
            }
        """.trimIndent()
        
+       // Configures how each layer (after processing) will be blended with the previous
+       // layer in the chain
+       override val blendMode: ImagineBlendMode = ImagineBlendMode.Normal
+       
+       // Configures the intensity of application of the pixel color output from this layer
        override val intensity: Float = 1.0f
        
-       override fun create(program: Int) {
+       override fun create(program: ImagineShader.Program) {
            // Optional override to extract your custom uniforms from the shader program
        }
        
-       override fun bind(program: Int) {
+       override fun bind(program: ImagineShader.Program) {
            // Optional override to bind your custom uniforms during processing
        }
    }
    ```
-5. Assign a list of `Layer` objects to `ImagineEngine`
+5. Assign a `List<ImagineLayer>` to `ImagineEngine`
    ```kotlin
    imagineEngine.layers = listOf(
-       SampleLayer(),
+       InvertGreenLayer(),
        ...
    )
    ```
@@ -118,8 +126,9 @@ dependencies {
    ```
 
 ## TODO
-- [ ] Photoshop like blend mode support for each `Layer`
-- [ ] More customisations in `Layer` shaders
+- [X] Photoshop like blend mode support for each `ImagineLayer`
+- [ ] Custom texture sampling in `ImagineLayer` fragment shader code
+- [ ] Ability to conditionally render an `ImagineLayer`
 - [ ] Viewport background color customisation
 
 ## License
