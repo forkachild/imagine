@@ -537,9 +537,6 @@ class ImagineEngine(imagineView: ImagineView) {
                 // Create a temporary full-sized tosschain for this task
                 val tosschain = ImagineTosschain.create(image.dimensions)
 
-                // Update the dimensions of the viewport before drawing
-                GLES20.glViewport(0, 0, image.dimensions.width, image.dimensions.height)
-
                 layers.forEachIndexed { index, layer ->
                     // Obtain the shader, otherwise stop applying layers
                     val shader = shaderFactory.getLayerShader(layer) ?: return@forEachIndexed

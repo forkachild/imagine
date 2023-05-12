@@ -10,8 +10,10 @@ import android.os.Looper
 import android.provider.MediaStore
 import com.suhel.imagine.editor.model.BitmapSaveException
 import com.suhel.imagine.editor.model.BitmapSaveFormat
+import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class BitmapSaveTask(
     private val context: Context,
@@ -25,14 +27,17 @@ class BitmapSaveTask(
     private val mainThread = Handler(Looper.getMainLooper())
 
     override fun run() {
-        val fileName =
-            SimpleDateFormat("dd-MM-yyyy-HH-mm-ss-Z", Locale.getDefault()).format(Date())
+        val timestamp = SimpleDateFormat(
+            "dd-MM-yyyy-HH-mm-SSSS",
+            Locale.getDefault()
+        ).format(Date())
+        val fileName = "imagine-$timestamp"
 
         val values = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, format.mimeType)
+            put(MediaStore.Images.ImageColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.ImageColumns.MIME_TYPE, format.mimeType)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+                put(MediaStore.Images.ImageColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
         }
 
         val contentResolver = context.contentResolver
