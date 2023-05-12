@@ -1,14 +1,15 @@
 # Imagine
 [![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
 
-GPU accelerated, blisteringly fast, highly optimised, easy-to-use, layer based image editing library with Photoshop-like blend mode support for Android using OpenGL ES 2.0.
+GPU accelerated, blisteringly fast, easy-to-use, layer based image editing library with Photoshop style blend mode support for Android using OpenGL ES 2.0.
 
 ## Features
 - Multiple consecutive customizable layers of processing.
 - Photoshop style blending mode for each layer to merge a layer atop the previous.
-- Easy to implement abstract interface `ImagineLayer` which provides the following:
-  - **`source: String`**: Source code snippet implementing a straightforward `vec4 process(vec4 color)` GLSL function.
-  - **`intensity: Float`**: A fractional value between 0.0f to 1.0f interpolating between pixels of previous and this layer.
+- Allows alpha blending between layers.
+- Easy to implement abstract interface `ImagineLayer` which must provide the following:
+  - **`source: String`**: GLSL code snippet implementing a `vec4 process(vec4 color)` function.
+  - **`intensity: Float`**: Mixing factor of pixel from this and the previous layer. Must lie between 0.0f to 1.0f.
   - **`blendMode: ImagineBlendMode`**: How to blend the current layer atop the previous layer.
 - 2 purposeful modes of operation
   - **`preview`**: Scaled down image for low memory footprint and faster viewport previews, invoked by `ImagineEngine.updatePreview()`.
@@ -23,10 +24,9 @@ A beautiful _Material You_ themed simple image editor is provided in the `editor
 The library code is extensively documented. Additionally, check out the story style blog [Imagine: A story of the evergreen OpenGL on Android](https://medium.com/@suhelchakraborty/imagine-a-story-of-the-evergreen-opengl-on-android-c36b4e8463f0) that details the conception of this library!
 
 ## Installation
-Add the source repository
 
-In project level `build.gradle`
-```groovy
+### In project level `build.gradle` (Older Gradle versions)
+```
 allprojects {
     repositories {
         ...
@@ -34,18 +34,20 @@ allprojects {
     }
 }
 ```
-or in `settings.gradle` in newer versions of Gradle
-```groovy
+
+### In `settings.gradle` (Newer Gradle versions)
+```
 dependencyResolutionManagement {
-    ...
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         ...
         maven { url 'https://jitpack.io' }
     }
 }
 ```
-Add the dependency in module level `build.gradle`
-```groovy
+
+### In module level `build.gradle`
+```
 dependencies {
     ...
     implementation 'com.github.forkachild:imagine:1.1.0'
@@ -62,9 +64,6 @@ dependencies {
    ```
 2. Configure `ImagineEngine`
    ```kotlin
-   import com.suhel.imagine.core.ImagineView
-   import com.suhel.imagine.core.ImagineEngine
-   
    private lateinit var imagineView: ImagineView
    private lateinit var imagineEngine: ImagineEngine
    
@@ -130,7 +129,7 @@ dependencies {
    ```
 
 ## TODO
-- [X] Photoshop like blend mode support for each `ImagineLayer`
+- [X] Photoshop style blend mode support for each `ImagineLayer`
 - [ ] Custom texture sampling in `ImagineLayer` fragment shader code
 - [ ] Ability to conditionally render an `ImagineLayer`
 - [ ] Viewport background color customisation
