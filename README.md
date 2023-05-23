@@ -1,7 +1,7 @@
 # Imagine
 [![Release](https://jitpack.io/v/forkachild/imagine.svg?style=flat-square)](https://jitpack.io/#forkachild/imagine)
 
-GPU accelerated, blisteringly fast, easy-to-use, layer based image editing library with Photoshop style blend mode support for Android using OpenGL ES 2.0.
+GPU accelerated, blisteringly fast, easy-to-use, layer based image editing library using OpenGL ES 2.0 for Android with support for Photoshop style blend modes.
 
 ## Features
 - Multiple consecutive customizable layers of processing.
@@ -11,7 +11,7 @@ GPU accelerated, blisteringly fast, easy-to-use, layer based image editing libra
   - **`source: String`**: GLSL code snippet implementing a `vec4 process(vec4 color)` function.
   - **`intensity: Float`**: Mixing factor of pixel from this and the previous layer. Must lie between 0.0f to 1.0f.
   - **`blendMode: ImagineBlendMode`**: How to blend the current layer atop the previous layer.
-- 2 purposeful modes of operation
+- 2 purposeful modes of operation:
   - **`preview`**: Scaled down image for low memory footprint and faster viewport previews, invoked by `ImagineEngine.updatePreview()`.
   - **`export`**: Full resolution mode for extracting an edited `Bitmap`, invoked by `ImagineEngine.exportBitmap()`.
 
