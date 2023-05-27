@@ -24,13 +24,14 @@ A beautiful _Material You_ themed simple image editor is provided in the `editor
 The library code is extensively documented. Additionally, check out the story style blog [Imagine: A story of the evergreen OpenGL on Android](https://medium.com/@suhelchakraborty/imagine-a-story-of-the-evergreen-opengl-on-android-c36b4e8463f0) that details the conception of this library!
 
 ## Installation
-```groovy
+Add this to your project level `build.gradle` file
+```gradle
 repositories {
   maven { url 'https://jitpack.io' }
 }
 ```
-
-```groovy
+Then add this to your module level `build.gradle` file
+```gradle
 dependencies {
   implementation 'com.github.forkachild:imagine:1.1.0'
 }
